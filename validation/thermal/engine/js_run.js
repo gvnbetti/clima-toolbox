@@ -27,7 +27,13 @@ function readWx(f) {
 }
 function prep(z) {
   const zz = JSON.parse(JSON.stringify(z));
-  zz.elements.forEach((e) => { if (e.kind === 'window') { e.U = WIN.U; e.g = WIN.g; e.height = e.geom.h; if (e.geom.overhang) e.overhang = { dep: e.geom.overhang.dep, gap: e.geom.overhang.gap }; } });
+  zz.elements.forEach((e) => {
+    if (e.kind !== 'window') return;
+    e.U = WIN.U; e.g = WIN.g; e.height = e.geom.h; if (e.geom.overhang) e.overhang = { dep: e.geom.overhang.dep, gap: e.geom.overhang.gap };
+    // window diagnostic only: opaque frame share of the opening, and glass recessed behind an outer reveal (shade.js)
+    if (e.geom.frame) e.frame = e.geom.frame;
+    if (e.geom.reveal) e.geo = { w: e.geom.w, h: e.geom.h * (1 - (e.geom.frame || 0)), t: e.geom.reveal, glass: e.geom.reveal };
+  });
   return zz;
 }
 function run(z, wx, opt) {
@@ -48,6 +54,8 @@ function run(z, wx, opt) {
   const r1 = (a) => Array.from(a, (x) => Math.round(x * 10) / 10);
   return z.ideal ? { tair: Array.from(tair, (x) => Math.round(x * 100) / 100), qh: r1(qh), qc: r1(qc) } : { tair: Array.from(tair, (x) => Math.round(x * 100) / 100) };
 }
+module.exports = { prep, run, readWx, VARIANTS, CLIMATES, G };
+if (require.main === module) {
 for (const [clim, f] of Object.entries(CLIMATES)) {
   const wx = readWx(f), list = clim === 'denver' ? Object.keys(CASES) : SPEC.climate_cases;
   for (const [v, opt] of Object.entries(VARIANTS)) {
@@ -55,4 +63,5 @@ for (const [clim, f] of Object.entries(CLIMATES)) {
     for (const c of list) fs.writeFileSync(path.join(dir, c + '.json'), JSON.stringify(run(prep(CASES[c]), wx, opt)));
   }
   console.log(clim);
+}
 }

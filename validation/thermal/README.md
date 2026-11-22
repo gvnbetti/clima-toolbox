@@ -92,10 +92,9 @@ degree-hours above 26 °C, free-floating cases):
 cause is its fixed exterior coefficient of 20 W/m²K, with which the window loses heat at its rated U-value in every
 hour. Wind-driven convection and the sky treatment of EnergyPlus together remove most of this bias. In this box the
 same changes overestimate cooling and overheating. Change 1 alone raises overheating by 21 %: calm hours lose less heat
-by day as well as by night. Change 2 lowers it, and change 3 raises it. The box of Standard 140 has large, flush
-windows, through which EnergyPlus loses part of the transmitted sun back out, so keeping that sun in the room
-(change 3) runs warm here. Room Clima's rooms differ: deep reveal, frame, one or two windows on one side. Studies 2
-and 3 test the changes there. The peak heating loads of the simplified model sit 1 to 16 % above the reference range.
+by day as well as by night. Change 2 lowers it, and change 3 raises it slightly. The window diagnostic below shows
+that change 1 is the main cause of the warm bias in the box, and that about half of the bias disappears when the
+box gets Room Clima's recessed, framed windows. Study 2 tests the changes in Room Clima's own rooms. The peak heating loads of the simplified model sit 1 to 16 % above the reference range.
 Room Clima does not report peak loads.
 
 ## Study 2: Room Clima's rooms, as the app runs them (`room-types/`)
@@ -186,12 +185,29 @@ worse; it improves the result only together with the others. Absolute overheatin
 0.5 K. This matters most for the DIN 4108-2 check in mild climates, where the limit is reached by few degree-hours. The
 bias is known and stated in the app.
 
+## Window diagnostic: why the box runs warm (`window-diagnostic/`)
+
+The free-floating cases 600FF and 900FF in 14 climates, with six window geometries from flush (Standard 140) to
+recessed and framed (Room Clima), in EnergyPlus and in all six variants of the engine. Results and method:
+`window-diagnostic/README.md`.
+
+- EnergyPlus keeps 96 to 98 % of the transmitted sun on opaque surfaces in every geometry. Change 3 raises overheating
+  by only 1 to 2 points; the earlier explanation, that sun leaves the box through its flush windows, does not hold.
+- Change 1 is the main cause of the warm bias: +12 to +14 points of overheating, +0.57 to +0.86 K, in every geometry.
+- Behind a reveal the app lets 5 to 7 % less summer sun through than EnergyPlus. With Room Clima's window, the warm
+  bias with all four changes falls from +1.05 K to +0.44 K: the window geometry explains about half of the difference
+  between box and rooms.
+- Neither model counts sun absorbed on window frames in the room study.
+
 ## Limits
 - Model against model: no measured room. Outside Denver the reference is one programme, EnergyPlus.
 - The calibration and held-out sets share rooms and designs; they differ in climate only.
 - One zone. Neighbouring rooms are at the same temperature (adiabatic). No ground contact.
 - The airflow through open windows (EN 16798-7) is not compared here. The same air change is given to both models.
 - Glazing transmission by angle (change 2) uses one curve, from EnergyPlus's double clear glazing, for all glazing types.
+- Sun absorbed on the outside of window frames is ignored by the app; the room study sets the EnergyPlus frames to
+  absorb none, so it does not test this. In the test box with Room Clima's windows, a frame absorptance of 0.6 adds
+  7 % overheating in EnergyPlus.
 - The DIN 4108-2 check in the app uses the bundled weather. A formal proof uses the DWD test reference year (Bundesinstitut für Bau-,
   Stadt- und Raumforschung, 2017).
 
@@ -202,6 +218,7 @@ cd thermal/engine && python3 cases.py && python3 ep_run.py && node js_run.js && 
 cd ../room-types && node dump.js && SET=holdout node dump.js
 python3 ep_run.py && SET=holdout python3 ep_run.py
 node replay.js && SET=holdout node replay.js && python3 analyse.py
+cd ../window-diagnostic && python3 diag_cases.py && python3 diag_ep.py && node diag_js.js && python3 diag_analyse.py
 ```
 EnergyPlus 25.2.0 (build cf7368216c), run through the EnergyPlus library of the `pyenergyplus-lbnl` 25.2.0 package
 (Wang, n.d.) with the input data dictionary of EnergyPlus 25.2.0 from its source; any EnergyPlus 25.2 executable will do
