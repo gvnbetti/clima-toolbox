@@ -1,13 +1,25 @@
 // Room types, step 1: the cases, run in the app engine (Room Clima build), with the hourly air change, blind state per
 // window and internal gains of each run, so that EnergyPlus runs the same operation and only the physics differ.
 // Output: WORK/room_types/cases.json and one file of hourly results per case in WORK/room_types/js/.
-const fs = require('fs'), path = require('path'), H = require('../../lib/app.js'), { S, wx } = H, OUT = path.join(require('../../lib/paths.js').WORK, 'room_types');
+// SET=calibration (default): the six weather files bundled in the app, the climates in which Room Clima's engine settings
+// were chosen. SET=holdout: the eight climates of the engine study not used for that choice, read from the reference
+// weather files; each is also written back to EPW (weather/files/app_<key>.epw) so that EnergyPlus reads the same values.
+const fs = require('fs'), path = require('path'), H = require('../../lib/app.js'), { S, wx } = H, P = require('../../lib/paths.js'), { readEpw, writeEpw } = require('../../lib/epw.js');
+const SET = process.env.SET || 'calibration', OUT = path.join(P.WORK, SET === 'holdout' ? 'room_types_holdout' : 'room_types');
 fs.mkdirSync(OUT + '/js', { recursive: true });
-const pad = (x, n) => String(x).padStart(n, '0');
-const CITIES = { mannheim: 'Mannheim', bologna: 'Bologna', san_francisco: 'San Francisco', phoenix: 'Phoenix', dubai: 'Dubai', ho_chi_minh_city: 'Ho Chi Minh City' };   // the six weather files bundled in the app
+const CAL = { mannheim: 'Mannheim', bologna: 'Bologna', san_francisco: 'San Francisco', phoenix: 'Phoenix', dubai: 'Dubai', ho_chi_minh_city: 'Ho Chi Minh City' };
+const HOLD = { miami: 'Miami', tampa: 'Tampa', new_delhi: 'New Delhi', denver: 'Denver', chicago: 'Chicago', montreal: 'Montreal', vancouver: 'Vancouver', yellowknife: 'Yellowknife' };
+const FILES = JSON.parse(require('child_process').execSync(`python3 -c "import json,climates;print(json.dumps(climates.CLIMATES))"`, { cwd: path.join(__dirname, '../engine') }));
+function weather(key, city) {
+  if (SET !== 'holdout') return wx(city);
+  const w = readEpw(path.join(P.WX, FILES[key]), city, H.G);
+  writeEpw(w, { name: city, file: FILES[key], comment: `written from ${FILES[key]} as Room Clima reads it` }, path.join(P.WX, `app_${key}.epw`));
+  return w;
+}
+const CITIES = SET === 'holdout' ? HOLD : CAL;
 const D = S.designs(6, 16).map((d) => Object.assign(d, { fans: 0, supply: 'outdoor' }));
 const out = [];
-for (const [wn, city] of Object.entries(CITIES)) { const w = wx(city);
+for (const [wn, city] of Object.entries(CITIES)) { const w = weather(wn, city);
   for (const use of ['office', 'dwelling']) { const ctx = S.context(w, use, {}); const u = ctx.use;
     for (const sc of S.SCENARIOS) for (const az of [180, 270]) D.forEach((d, k) => {
       const c = Object.assign({ scenario: sc, azimuth: az }, d), zp = S.zoneParams(ctx, c), zone = H.sb.SweepZone.buildZone(zp), shd = S.shadeOf(ctx, c);

@@ -6,8 +6,8 @@ results; the scripts that produce them; and the result files they write. Every s
 
 | Model | Used by | Reference | Result | Folder |
 |---|---|---|---|---|
-| Hourly room model (EN ISO 52016-1 with three changes) | Room Clima | ASHRAE Standard 140-2020 (ASHRAE, 2020a); EnergyPlus 24.2 (Crawley et al., 2001) in 14 climates | Standard 140: 32 of 44 within range (EnergyPlus 43); heating 4.8 %, cooling 12.7 % from the reference median | `thermal/` |
-| Room Clima's rooms with their operation | Room Clima | EnergyPlus 24.2, 432 rooms in 6 climates | hourly RMSE 0.69 K, bias −0.49 K; overheating −8 %; same ranking (0.98), same best design in 68 of 72 groups | `thermal/` |
+| Hourly room model (EN ISO 52016-1 with four changes) | Room Clima | ASHRAE Standard 140-2020 (ASHRAE, 2020a); EnergyPlus 25.2 (Crawley et al., 2001) in 14 climates | Standard 140: 32 of 44 within range (EnergyPlus 43, the standard as written 33); heating 4.8 %, cooling 12.7 % from the reference median | `thermal/` |
+| Room Clima's rooms with their operation | Room Clima | EnergyPlus 25.2: 432 rooms in the 6 climates where the settings were chosen, 576 rooms in 8 held-out climates | hourly RMSE 0.69 K and 0.75 K, bias about −0.5 K; same ranking (0.98), same best design in 68 of 72 and 95 of 96 groups; regret at most 71 K·h, 7 % of the spread of the designs | `thermal/` |
 | Daylight with and without blinds | Room Clima | Radiance (Ward, 1994), 6 rooms × 6 climates | useful daylight within 2.9 points in all 108 cases; mean +1.0 (no blind), +0.3 (interior), −0.9 (exterior) | `daylight/` |
 | Climate reading: sun, surfaces, psychrometrics, UTCI, adaptive comfort | Macro Clima | pvlib (Holmgren et al., 2018), psychrolib (Meyer & Thevenard, 2019), pythermalcomfort (Tartarini & Schiavon, 2020) | sun within 0.02°; surfaces within 0.2 %; psychrometrics and UTCI identical | `climate-reading/` |
 | Future climate | Macro, Micro, Room Clima | IPCC AR6 Atlas data (Iturbide et al., 2021); official regions (Iturbide et al., 2020); pyepwmorph (McCarty, n.d.) after Belcher et al. (2005) | table within 0.05 K on average; region 99.99 %; morphing equal on the annual mean, dew point within 0.01 K | `future-climate/` |
@@ -25,8 +25,8 @@ were rerun on that code on 21 November 2026; the future-climate code itself did 
 - Future climate: the shipped table differs from the reconstructed calculation by 0.05 K on average and up to about
   0.5 K in single months; monthly mean shifts are up to 0.18 K off after morphing; sky infrared rises by 10.4 W/m²
   where pyepwmorph gives 12.8 W/m². Corrections are under review.
-- Room Clima's hourly model is tuned to its own rooms: in the Standard 140 test box it reaches 32 of 44 ranges and
-  overestimates cooling by 12.7 %.
+- Room Clima's hourly model is set for its own rooms: in the Standard 140 test box it reaches 32 of 44 ranges and
+  overestimates cooling by 12.7 %. In its rooms the settings hold in eight climates not used to choose them.
 - Not yet checked independently: the Givoni-Milne strategy zones of Macro Clima, and the German national annex comfort
   band (DIN EN 16798-1/NA), for which no open reference exists.
 - Daylight blinds are modelled as a diffusing layer; the angle dependence of venetian slats is not modelled.
@@ -36,7 +36,8 @@ established model. Neither compares the tools with measured buildings or outdoor
 these studies.
 
 ## Software
-- EnergyPlus 24.2.0 (build 94a887817b) (U.S. Department of Energy, 2024)
+- EnergyPlus 25.2.0 (build cf7368216c) (U.S. Department of Energy, 2025), through `pyenergyplus-lbnl` 25.2.0 (Wang, n.d.);
+  EnergyPlus 24.2.0 for the runs before 21 November 2026, which 25.2 reproduces
 - Radiance 6.0a (as shipped with pyradiance 1.3.1; Lawrence Berkeley National Laboratory, n.d.)
 - Node.js 22
 - Python 3.13 with numpy, pandas, scipy, pvlib 0.16.1, pythermalcomfort 4.8.1, ladybug-comfort 0.19.18, pyepwmorph
@@ -52,11 +53,13 @@ build Room Clima first (`python3 room/build.py`).
 
 ## Runs
 All results were produced on 20 November 2026 and, for the studies affected by the shared core, again on 21 November
-2026, with the code at the commit that adds them. Earlier runs, on earlier
-versions, are kept in `history/` folders where they were published.
+2026, with the code at the commit that adds them. The thermal studies were rerun later on 21 November 2026 with
+EnergyPlus 25.2, the standard as written without the sky treatment of EnergyPlus, each change tested on its own, and
+the held-out climates added. Earlier runs, on earlier versions, are kept in `history/` folders where they were
+published.
 
 ## References
-<!-- refs: ashrae140 crawley2001 ward1994 holmgren2018 meyer2019 tartarini2020 iturbide2021 iturbide2020 mccarty belcher2005 theeuwes2017 roudsari2013 perez1990 clark1978 usdoe2024 pyradiance -->
+<!-- refs: ashrae140 crawley2001 usdoe2025 pyenergyplus ward1994 holmgren2018 meyer2019 tartarini2020 iturbide2021 iturbide2020 mccarty belcher2005 theeuwes2017 roudsari2013 perez1990 clark1978 usdoe2024 pyradiance -->
 
 ASHRAE. (2020a). *ANSI/ASHRAE Standard 140-2020: Method of test for evaluating building performance simulation software*. American Society of Heating, Refrigerating and Air-Conditioning Engineers.
 
@@ -87,5 +90,9 @@ Tartarini, F., & Schiavon, S. (2020). pythermalcomfort: A Python package for the
 Theeuwes, N. E., Steeneveld, G. J., Ronda, R. J., & Holtslag, A. A. M. (2017). A diagnostic equation for the daily maximum urban heat island effect for cities in northwestern Europe. *International Journal of Climatology, 37*(1), 443–454. https://doi.org/10.1002/joc.4717
 
 U.S. Department of Energy. (2024). *EnergyPlus version 24.2 documentation: Engineering reference; Auxiliary programs*. https://energyplus.net/documentation
+
+U.S. Department of Energy. (2025). *EnergyPlus version 25.2 documentation: Engineering reference*. https://energyplus.net/documentation
+
+Wang, T. (n.d.). *pyenergyplus_lbnl: Standalone Python package of the EnergyPlus API* (Version 25.2.0) [Computer software]. Lawrence Berkeley National Laboratory. https://github.com/taoning/pyenergyplus
 
 Ward, G. J. (1994). The RADIANCE lighting simulation and rendering system. In *Proceedings of the 21st Annual Conference on Computer Graphics and Interactive Techniques (SIGGRAPH '94)* (pp. 459–472). ACM. https://doi.org/10.1145/192161.192286

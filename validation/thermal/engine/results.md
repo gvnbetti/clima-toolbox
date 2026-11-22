@@ -8,15 +8,19 @@ Within range: annual loads against the Addendum b acceptance ranges; peaks and f
 
 | Model | Within range (of 44) | Heating | Cooling | Peak heating | Peak cooling | Free-float max | Free-float min |
 |---|---|---|---|---|---|---|---|
-| EnergyPlus 24.2 | 43 | 2.6% (-0.4) | 2.6% (+2.5) | 1.0% (+0.7) | 4.4% (+4.0) | 0.3 K (-0.3) | 0.3 K (+0.3) |
-| App engine, EN ISO 52016-1 as written | 33 | 14.6% (+14.6) | 8.0% (+6.4) | 11.0% (+11.0) | 6.3% (-0.8) | 0.9 K (-0.7) | 0.4 K (+0.2) |
-| App engine, settings of Room Clima | 32 | 4.8% (+4.8) | 12.7% (+12.7) | 10.6% (+10.6) | 6.9% (+6.9) | 0.9 K (+0.6) | 0.2 K (+0.2) |
+| EnergyPlus 25.2 | 43 | 2.6% (-0.4) | 2.6% (+2.5) | 1.0% (+0.7) | 4.4% (+4.0) | 0.3 K (-0.3) | 0.3 K (+0.3) |
+| App engine, EN ISO 52016-1 as written | 33 | 17.2% (+17.2) | 6.9% (+4.2) | 11.8% (+11.8) | 6.1% (-1.6) | 1.0 K (-0.9) | 0.4 K (+0.0) |
+| as written + (1) wind-driven exterior convection | 31 | 10.6% (+10.6) | 17.5% (+17.5) | 10.3% (+10.3) | 6.5% (+3.8) | 0.9 K (+0.9) | 0.3 K (-0.3) |
+| as written + (2) angle-dependent glazing transmission | 30 | 17.6% (+17.6) | 6.9% (-6.9) | 11.8% (+11.8) | 1.7% (-0.6) | 2.0 K (-2.0) | 0.3 K (+0.1) |
+| as written + (3) transmitted sun on opaque surfaces only | 34 | 15.4% (+15.4) | 8.8% (+7.3) | 11.6% (+11.6) | 5.8% (+0.0) | 0.7 K (-0.5) | 0.3 K (+0.1) |
+| as written + (4) sky long-wave over the root of the sky view | 33 | 14.6% (+14.6) | 8.0% (+6.4) | 11.0% (+11.0) | 6.3% (-0.8) | 0.9 K (-0.7) | 0.4 K (+0.2) |
+| App engine, settings of Room Clima (1 to 4) | 32 | 4.8% (+4.8) | 12.7% (+12.7) | 10.6% (+10.6) | 6.9% (+6.9) | 0.9 K (+0.6) | 0.2 K (+0.2) |
 
 Outside the range:
 
-- EnergyPlus 24.2: 620 peak cooling 4.81 [3.955 to 4.797]
-- App engine, EN ISO 52016-1 as written: 910 annual heating 2.39 [1.56 to 2.3]; 900 annual cooling 2.87 [2.35 to 2.6]; 600 peak heating 3.51 [3.02 to 3.359]; 610 peak heating 3.51 [3.021 to 3.36]; 620 peak heating 3.54 [3.038 to 3.385]; 900 peak heating 2.92 [2.443 to 2.778]; 910 peak heating 2.94 [2.469 to 2.799]; 920 peak heating 2.99 [2.512 to 2.895]; 940 peak heating 4.02 [3.052 to 3.882]; 950 peak cooling 2.52 [2.054 to 2.388]; 650FF maximum 60.78 [61.1 to 66.8]
-- App engine, settings of Room Clima: 900 annual cooling 2.88 [2.35 to 2.6]; 920 annual cooling 3.22 [2.43 to 3.08]; 600 peak heating 3.41 [3.02 to 3.359]; 610 peak heating 3.41 [3.021 to 3.36]; 620 peak heating 3.45 [3.038 to 3.385]; 900 peak heating 2.84 [2.443 to 2.778]; 910 peak heating 2.86 [2.469 to 2.799]; 920 peak heating 2.92 [2.512 to 2.895]; 940 peak heating 4.53 [3.052 to 3.882]; 620 peak cooling 4.87 [3.955 to 4.797]; 950 peak cooling 2.43 [2.054 to 2.388]; 950FF maximum 35.89 [36.1 to 37.1]
+- EnergyPlus 25.2: 620 peak cooling 4.81 [3.955 to 4.797]
+- App engine, EN ISO 52016-1 as written: 910 annual heating 2.46 [1.56 to 2.3]; 900 annual cooling 2.80 [2.35 to 2.6]; 600 peak heating 3.54 [3.02 to 3.359]; 610 peak heating 3.54 [3.021 to 3.36]; 620 peak heating 3.56 [3.038 to 3.385]; 900 peak heating 2.94 [2.443 to 2.778]; 910 peak heating 2.96 [2.469 to 2.799]; 920 peak heating 3.01 [2.512 to 2.895]; 940 peak heating 4.05 [3.052 to 3.882]; 950 peak cooling 2.49 [2.054 to 2.388]; 650FF maximum 60.60 [61.1 to 66.8]
+- App engine, settings of Room Clima (1 to 4): 900 annual cooling 2.88 [2.35 to 2.6]; 920 annual cooling 3.22 [2.43 to 3.08]; 600 peak heating 3.41 [3.02 to 3.359]; 610 peak heating 3.41 [3.021 to 3.36]; 620 peak heating 3.45 [3.038 to 3.385]; 900 peak heating 2.84 [2.443 to 2.778]; 910 peak heating 2.86 [2.469 to 2.799]; 920 peak heating 2.92 [2.512 to 2.895]; 940 peak heating 4.53 [3.052 to 3.882]; 620 peak cooling 4.87 [3.955 to 4.797]; 950 peak cooling 2.43 [2.054 to 2.388]; 950FF maximum 35.89 [36.1 to 37.1]
 
 ### Per case
 
@@ -24,50 +28,50 @@ Each cell: EnergyPlus / app engine as written / Room Clima settings; an asterisk
 
 | Case | Metric | Range | Values |
 |---|---|---|---|
-| 600 | annual heating, MWh | 3.75 to 4.98 | 4.32 / 4.69 / 4.58 |
-| 610 | annual heating, MWh | 3.61 to 5.27 | 4.37 / 4.81 / 4.68 |
-| 620 | annual heating, MWh | 3.67 to 5.38 | 4.48 / 4.91 / 4.73 |
-| 640 | annual heating, MWh | 1.58 to 3.76 | 2.58 / 2.81 / 2.75 |
-| 900 | annual heating, MWh | 1.04 to 2.28 | 1.66 / 2.00 / 1.70 |
-| 910 | annual heating, MWh | 1.56 to 2.3 | 1.95 / 2.39* / 2.03 |
-| 920 | annual heating, MWh | 2.55 to 4.2 | 3.33 / 3.72 / 3.43 |
-| 940 | annual heating, MWh | 0.22 to 1.91 | 1.04 / 1.34 / 1.11 |
-| 600 | annual cooling, MWh | 5.0 to 6.83 | 6.05 / 6.20 / 6.48 |
-| 610 | annual cooling, MWh | 2.74 to 6.03 | 4.36 / 4.10 / 4.82 |
-| 620 | annual cooling, MWh | 2.76 to 5.19 | 4.08 / 4.17 / 4.64 |
-| 640 | annual cooling, MWh | 4.44 to 6.86 | 5.77 / 5.85 / 6.11 |
-| 650 | annual cooling, MWh | 3.46 to 5.88 | 4.85 / 4.84 / 5.02 |
-| 900 | annual cooling, MWh | 2.35 to 2.6 | 2.51 / 2.87* / 2.88* |
-| 910 | annual cooling, MWh | 0.86 to 2.0 | 1.41 / 1.34 / 1.71 |
-| 920 | annual cooling, MWh | 2.43 to 3.08 | 2.74 / 2.86 / 3.22* |
-| 940 | annual cooling, MWh | 2.24 to 3.14 | 2.45 / 2.81 / 2.80 |
-| 950 | annual cooling, MWh | 0.43 to 1.52 | 0.70 / 0.76 / 0.65 |
-| 600 | peak heating, kW | 3.02 to 3.359 | 3.20 / 3.51* / 3.41* |
-| 610 | peak heating, kW | 3.021 to 3.36 | 3.19 / 3.51* / 3.41* |
-| 620 | peak heating, kW | 3.038 to 3.385 | 3.23 / 3.54* / 3.45* |
-| 640 | peak heating, kW | 4.039 to 4.658 | 4.35 / 4.56 / 4.50 |
-| 900 | peak heating, kW | 2.443 to 2.778 | 2.68 / 2.92* / 2.84* |
-| 910 | peak heating, kW | 2.469 to 2.799 | 2.69 / 2.94* / 2.86* |
-| 920 | peak heating, kW | 2.512 to 2.895 | 2.77 / 2.99* / 2.92* |
-| 940 | peak heating, kW | 3.052 to 3.882 | 3.29 / 4.02* / 4.53* |
-| 600 | peak cooling, kW | 5.422 to 6.481 | 6.35 / 5.57 / 6.33 |
-| 610 | peak cooling, kW | 5.331 to 6.432 | 6.07 / 5.37 / 6.10 |
-| 620 | peak cooling, kW | 3.955 to 4.797 | 4.81* / 4.50 / 4.87* |
-| 640 | peak cooling, kW | 5.365 to 6.429 | 6.23 / 5.53 / 6.31 |
-| 650 | peak cooling, kW | 5.045 to 6.29 | 6.12 / 5.48 / 6.28 |
-| 900 | peak cooling, kW | 2.556 to 3.376 | 3.10 / 3.16 / 3.22 |
-| 910 | peak cooling, kW | 2.081 to 2.722 | 2.47 / 2.30 / 2.53 |
-| 920 | peak cooling, kW | 2.71 to 3.481 | 3.26 / 3.21 / 3.44 |
-| 940 | peak cooling, kW | 2.556 to 3.376 | 3.10 / 3.16 / 3.22 |
-| 950 | peak cooling, kW | 2.054 to 2.388 | 2.25 / 2.52* / 2.43* |
-| 600FF | maximum, °C | 62.4 to 68.4 | 63.77 / 62.69 / 65.56 |
-| 650FF | maximum, °C | 61.1 to 66.8 | 62.43 / 60.78* / 63.44 |
-| 900FF | maximum, °C | 43.3 to 46.0 | 43.90 / 44.72 / 45.25 |
-| 950FF | maximum, °C | 36.1 to 37.1 | 36.30 / 36.53 / 35.89* |
-| 600FF | minimum, °C | -13.8 to -9.9 | -12.55 / -12.14 / -13.16 |
-| 650FF | minimum, °C | -17.8 to -16.7 | -17.07 / -17.49 / -17.58 |
-| 900FF | minimum, °C | 0.6 to 2.2 | 1.34 / 0.94 / 1.93 |
-| 950FF | minimum, °C | -13.4 to -12.5 | -12.80 / -13.04 / -12.85 |
+| 600 | annual heating, MWh | 3.75 to 4.98 | 4.32 / 4.77 / 4.58 |
+| 610 | annual heating, MWh | 3.61 to 5.27 | 4.37 / 4.89 / 4.68 |
+| 620 | annual heating, MWh | 3.67 to 5.38 | 4.48 / 4.99 / 4.73 |
+| 640 | annual heating, MWh | 1.58 to 3.76 | 2.58 / 2.87 / 2.75 |
+| 900 | annual heating, MWh | 1.04 to 2.28 | 1.66 / 2.06 / 1.70 |
+| 910 | annual heating, MWh | 1.56 to 2.3 | 1.95 / 2.46* / 2.03 |
+| 920 | annual heating, MWh | 2.55 to 4.2 | 3.33 / 3.81 / 3.43 |
+| 940 | annual heating, MWh | 0.22 to 1.91 | 1.04 / 1.39 / 1.11 |
+| 600 | annual cooling, MWh | 5.0 to 6.83 | 6.05 / 6.13 / 6.48 |
+| 610 | annual cooling, MWh | 2.74 to 6.03 | 4.36 / 4.04 / 4.82 |
+| 620 | annual cooling, MWh | 2.76 to 5.19 | 4.08 / 4.11 / 4.64 |
+| 640 | annual cooling, MWh | 4.44 to 6.86 | 5.77 / 5.78 / 6.11 |
+| 650 | annual cooling, MWh | 3.46 to 5.88 | 4.85 / 4.78 / 5.02 |
+| 900 | annual cooling, MWh | 2.35 to 2.6 | 2.51 / 2.80* / 2.88* |
+| 910 | annual cooling, MWh | 0.86 to 2.0 | 1.41 / 1.28 / 1.71 |
+| 920 | annual cooling, MWh | 2.43 to 3.08 | 2.74 / 2.80 / 3.22* |
+| 940 | annual cooling, MWh | 2.24 to 3.14 | 2.45 / 2.74 / 2.80 |
+| 950 | annual cooling, MWh | 0.43 to 1.52 | 0.70 / 0.74 / 0.65 |
+| 600 | peak heating, kW | 3.02 to 3.359 | 3.20 / 3.54* / 3.41* |
+| 610 | peak heating, kW | 3.021 to 3.36 | 3.19 / 3.54* / 3.41* |
+| 620 | peak heating, kW | 3.038 to 3.385 | 3.23 / 3.56* / 3.45* |
+| 640 | peak heating, kW | 4.039 to 4.658 | 4.35 / 4.57 / 4.50 |
+| 900 | peak heating, kW | 2.443 to 2.778 | 2.68 / 2.94* / 2.84* |
+| 910 | peak heating, kW | 2.469 to 2.799 | 2.69 / 2.96* / 2.86* |
+| 920 | peak heating, kW | 2.512 to 2.895 | 2.77 / 3.01* / 2.92* |
+| 940 | peak heating, kW | 3.052 to 3.882 | 3.29 / 4.05* / 4.53* |
+| 600 | peak cooling, kW | 5.422 to 6.481 | 6.35 / 5.54 / 6.33 |
+| 610 | peak cooling, kW | 5.331 to 6.432 | 6.07 / 5.34 / 6.10 |
+| 620 | peak cooling, kW | 3.955 to 4.797 | 4.81* / 4.47 / 4.87* |
+| 640 | peak cooling, kW | 5.365 to 6.429 | 6.23 / 5.50 / 6.31 |
+| 650 | peak cooling, kW | 5.045 to 6.29 | 6.12 / 5.45 / 6.28 |
+| 900 | peak cooling, kW | 2.556 to 3.376 | 3.10 / 3.14 / 3.22 |
+| 910 | peak cooling, kW | 2.081 to 2.722 | 2.47 / 2.27 / 2.53 |
+| 920 | peak cooling, kW | 2.71 to 3.481 | 3.26 / 3.19 / 3.44 |
+| 940 | peak cooling, kW | 2.556 to 3.376 | 3.10 / 3.14 / 3.22 |
+| 950 | peak cooling, kW | 2.054 to 2.388 | 2.25 / 2.49* / 2.43* |
+| 600FF | maximum, °C | 62.4 to 68.4 | 63.77 / 62.47 / 65.56 |
+| 650FF | maximum, °C | 61.1 to 66.8 | 62.43 / 60.60* / 63.44 |
+| 900FF | maximum, °C | 43.3 to 46.0 | 43.90 / 44.50 / 45.25 |
+| 950FF | maximum, °C | 36.1 to 37.1 | 36.30 / 36.43 / 35.89* |
+| 600FF | minimum, °C | -13.8 to -9.9 | -12.55 / -12.40 / -13.16 |
+| 650FF | minimum, °C | -17.8 to -16.7 | -17.07 / -17.53 / -17.58 |
+| 900FF | minimum, °C | 0.6 to 2.2 | 1.34 / 0.72 / 1.93 |
+| 950FF | minimum, °C | -13.4 to -12.5 | -12.80 / -13.08 / -12.85 |
 
 ## Part 2. Fourteen climates, against EnergyPlus
 
@@ -75,38 +79,42 @@ Standard 140 box, cases 600, 620, 650, 900, 920, 950, 600FF, 900FF. Heating and 
 
 | Climate | Köppen | Model | Heating | Cooling | Free-float max | Overheating | Hourly RMSE |
 |---|---|---|---|---|---|---|---|
-| Ho Chi Minh City | Aw | as written | – | 5.8% (+5.8) | 0.2 K (-0.2) | 5.6% (+5.6) | 1.06 K |
+| Ho Chi Minh City | Aw | as written | – | 5.0% (+5.0) | 0.3 K (-0.3) | 4.8% (+4.8) | 1.00 K |
 | Ho Chi Minh City | Aw | Room Clima | – | 9.0% (+9.0) | 2.8 K (+2.8) | 11.6% (+11.6) | 1.52 K |
-| Miami | Am | as written | – | 10.5% (+10.5) | 1.0 K (-0.3) | 10.7% (+10.7) | 1.38 K |
+| Miami | Am | as written | – | 9.3% (+9.3) | 1.1 K (-0.4) | 9.4% (+9.4) | 1.28 K |
 | Miami | Am | Room Clima | – | 9.6% (+9.6) | 2.1 K (+2.1) | 11.7% (+11.7) | 1.32 K |
-| Tampa | Cfa | as written | 4.6% (+4.6) | 8.9% (+8.9) | 2.1 K (-1.0) | 10.4% (+10.4) | 1.42 K |
+| Tampa | Cfa | as written | 8.3% (+8.3) | 7.5% (+7.5) | 2.1 K (-1.2) | 8.8% (+8.8) | 1.32 K |
 | Tampa | Cfa | Room Clima | 9.6% (+9.6) | 9.7% (+9.7) | 1.6 K (+1.6) | 13.4% (+13.4) | 1.45 K |
-| Dubai | BWh | as written | – | 7.6% (+7.6) | 0.6 K (-0.2) | 9.0% (+9.0) | 1.85 K |
+| Dubai | BWh | as written | – | 6.5% (+6.5) | 0.6 K (-0.4) | 7.9% (+7.9) | 1.72 K |
 | Dubai | BWh | Room Clima | – | 7.1% (+7.1) | 1.7 K (+1.7) | 10.7% (+10.7) | 1.81 K |
-| New Delhi | BSh | as written | – | 2.8% (+2.8) | 2.4 K (-2.4) | 2.5% (+2.5) | 1.54 K |
+| New Delhi | BSh | as written | – | 2.0% (+1.9) | 2.5 K (-2.5) | 1.4% (+1.4) | 1.50 K |
 | New Delhi | BSh | Room Clima | – | 9.2% (+9.2) | 2.1 K (+2.1) | 13.6% (+13.6) | 2.08 K |
-| Phoenix | BWh | as written | 2.9% (+2.9) | 6.0% (+6.0) | 1.4 K (-0.6) | 7.9% (+7.9) | 1.94 K |
+| Phoenix | BWh | as written | 7.0% (+7.0) | 4.7% (+4.7) | 1.4 K (-0.9) | 6.3% (+6.3) | 1.83 K |
 | Phoenix | BWh | Room Clima | 10.8% (+10.8) | 7.8% (+7.8) | 1.5 K (+1.5) | 12.4% (+12.4) | 1.94 K |
-| San Francisco | Csb | as written | 8.8% (+8.8) | 17.0% (+17.0) | 1.8 K (-1.8) | 20.5% (+20.5) | 1.67 K |
+| San Francisco | Csb | as written | 13.3% (+13.3) | 13.8% (+13.8) | 2.1 K (-2.1) | 16.1% (+16.1) | 1.59 K |
 | San Francisco | Csb | Room Clima | 7.3% (+3.6) | 20.1% (+20.1) | 1.3 K (+1.3) | 19.6% (+19.6) | 1.14 K |
-| Denver | BSk | as written | 12.7% (+12.7) | 5.4% (+5.3) | 1.0 K (-0.1) | 7.6% (+7.6) | 1.50 K |
+| Denver | BSk | as written | 15.1% (+15.1) | 3.8% (+3.3) | 1.0 K (-0.4) | 5.2% (+5.2) | 1.49 K |
 | Denver | BSk | Room Clima | 4.3% (+4.3) | 10.5% (+8.1) | 1.6 K (+1.6) | 11.3% (+11.3) | 1.20 K |
-| Chicago | Dfa | as written | 8.1% (+8.1) | 13.0% (+13.0) | 1.9 K (+1.9) | 16.5% (+16.5) | 1.26 K |
+| Chicago | Dfa | as written | 9.6% (+9.6) | 11.2% (+11.2) | 1.7 K (+1.7) | 14.3% (+14.3) | 1.21 K |
 | Chicago | Dfa | Room Clima | 3.6% (+3.6) | 11.5% (+9.7) | 1.0 K (+1.0) | 12.6% (+12.6) | 0.91 K |
-| Bologna | Cfa | as written | 13.6% (+13.6) | 2.6% (+2.0) | 1.2 K (+1.2) | 5.0% (+5.0) | 1.20 K |
+| Bologna | Cfa | as written | 15.5% (+15.5) | 2.0% (+0.6) | 1.0 K (+1.0) | 3.4% (+3.4) | 1.18 K |
 | Bologna | Cfa | Room Clima | 3.9% (+3.9) | 9.9% (+9.5) | 1.7 K (+1.7) | 14.0% (+14.0) | 1.30 K |
-| Montreal | Dfb | as written | 8.3% (+8.3) | 10.0% (+10.0) | 0.5 K (+0.5) | 14.8% (+14.8) | 1.29 K |
+| Montreal | Dfb | as written | 9.9% (+9.9) | 7.9% (+7.9) | 0.4 K (+0.4) | 12.3% (+12.3) | 1.27 K |
 | Montreal | Dfb | Room Clima | 3.5% (+3.5) | 13.8% (+13.8) | 1.6 K (+1.6) | 13.9% (+13.9) | 0.98 K |
-| Mannheim | Cfb | as written | 9.5% (+9.5) | 4.2% (+3.8) | 1.7 K (-1.7) | 6.0% (+6.0) | 0.96 K |
+| Mannheim | Cfb | as written | 11.7% (+11.7) | 3.1% (+1.1) | 1.9 K (-1.9) | 2.7% (+2.7) | 0.93 K |
 | Mannheim | Cfb | Room Clima | 3.7% (+3.7) | 16.4% (+16.4) | 0.5 K (+0.5) | 15.4% (+15.4) | 1.05 K |
-| Vancouver | Cfb | as written | 9.8% (+9.8) | 7.4% (+7.4) | 0.6 K (-0.4) | 12.3% (+12.3) | 0.99 K |
+| Vancouver | Cfb | as written | 11.6% (+11.6) | 5.6% (+5.6) | 0.7 K (-0.6) | 9.9% (+9.9) | 0.97 K |
 | Vancouver | Cfb | Room Clima | 4.3% (+4.3) | 16.3% (+16.3) | 1.5 K (+1.5) | 16.8% (+16.8) | 0.97 K |
-| Yellowknife | Dfc | as written | 8.7% (+8.7) | 4.9% (+0.9) | 0.3 K (+0.1) | 3.6% (+1.9) | 1.38 K |
+| Yellowknife | Dfc | as written | 9.6% (+9.6) | 4.1% (-2.0) | 0.4 K (-0.1) | 2.6% (-1.2) | 1.47 K |
 | Yellowknife | Dfc | Room Clima | 3.9% (+3.9) | 18.1% (+18.1) | 0.8 K (+0.8) | 17.2% (+17.2) | 1.11 K |
 
-All climates:
+All climates, each change alone and all together:
 
 | Model | Heating | Cooling | Free-float max | Overheating | Hourly RMSE |
 |---|---|---|---|---|---|
-| App engine, EN ISO 52016-1 as written | 9.3% (+9.3) | 7.5% (+7.2) | 1.2 K (-0.4) | 9.4% (+9.3) | 1.39 K |
-| App engine, settings of Room Clima | 4.9% (+4.6) | 11.8% (+11.4) | 1.5 K (+1.5) | 13.9% (+13.9) | 1.34 K |
+| App engine, EN ISO 52016-1 as written | 11.5% (+11.5) | 6.1% (+5.5) | 1.2 K (-0.5) | 7.5% (+7.2) | 1.34 K |
+| as written + (1) wind-driven exterior convection | 9.4% (+9.4) | 15.1% (+15.1) | 2.0 K (+1.9) | 20.9% (+20.9) | 1.94 K |
+| as written + (2) angle-dependent glazing transmission | 12.1% (+12.1) | 5.1% (-3.4) | 1.7 K (-1.7) | 6.0% (-5.6) | 0.98 K |
+| as written + (3) transmitted sun on opaque surfaces only | 10.5% (+10.5) | 8.3% (+8.2) | 1.1 K (-0.1) | 10.2% (+10.2) | 1.39 K |
+| as written + (4) sky long-wave over the root of the sky view | 9.3% (+9.3) | 7.5% (+7.2) | 1.2 K (-0.4) | 9.4% (+9.3) | 1.39 K |
+| App engine, settings of Room Clima (1 to 4) | 4.9% (+4.6) | 11.8% (+11.4) | 1.5 K (+1.5) | 13.9% (+13.9) | 1.34 K |

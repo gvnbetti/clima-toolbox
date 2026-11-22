@@ -1550,7 +1550,7 @@ window.CLIMA_REGIONS = [{"id":"GIC","name":"Greenland/Iceland","type":"Land","ri
 
   // ------------------------------------------------------------------ EN ISO 52016-1 hourly method
   function Iso52016(zone, wx, opt) {
-    opt = Object.assign({ fw: 0.9, hciDynamic: true, kappaInt: 10000, fSolC: 0.1, fIntC: null, hce: 20, hre: 4.14, hri: 5.13, wind: null, beamFloor: false, shade: null }, opt || {});
+    opt = Object.assign({ fw: 0.9, hciDynamic: true, kappaInt: 10000, fSolC: 0.1, fIntC: null, hce: 20, hre: 4.14, hri: 5.13, wind: null, beamFloor: false, shade: null, skySplit: true }, opt || {});
     const H = zone.height || (zone.volume / zone.floorArea);
     const fIntC = opt.fIntC != null ? opt.fIntC : zone.gains && zone.gains.radFrac != null ? 1 - zone.gains.radFrac : 0.4;
     const els = [], dt = 3600;
@@ -2051,7 +2051,11 @@ window.CLIMA_REGIONS = [{"id":"GIC","name":"Greenland/Iceland","type":"Land","ri
     fin05: { label: "Side fins 0.5 m", fins: { depth: 0.5 } },
     box05: { label: "Frame 0.5 m", overhang: { depth: 0.5, ext: 0 }, fins: { depth: 0.5 } },
   };
-  const ENGINE = { solOnWindows: false }; // after the EnergyPlus check of the room types (24 October 2026)
+  // Room Clima's four changes to EN ISO 52016-1, set here and in the call to Geo.Iso52016 below: wind-driven exterior
+// convection (wind), angle-dependent glazing transmission (fw: "angle"), transmitted sun on opaque surfaces only
+// (solOnWindows: false, chosen after the EnergyPlus check of the room types, 24 October 2026), and sky long-wave exchange
+// over the square root of the sky view factor (skySplit, as EnergyPlus). validation/thermal/ tests each one.
+const ENGINE = { solOnWindows: false, skySplit: true };
   const WALL = { depth: 0.35, glass: 0.25 }; // default; glass 10 cm behind the inner face. Override per run with ctx.wall
   const SHADE_LEVELS = { dwelling: ["none", "interior", "exterior"], office: ["none", "interior", "exterior"], school: ["none", "interior", "exterior"] };
   const W_COIL = 0.0093; // kg/kg: saturation at 13 °C, the coil leaving temperature of the cooling air

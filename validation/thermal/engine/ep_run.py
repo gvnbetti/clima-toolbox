@@ -1,10 +1,10 @@
-"""EnergyPlus 24.2 models of the Standard 140 cases (cases.py), run in Denver (all 14 cases, the Standard 140 test) and in
+"""EnergyPlus 25.2 models of the Standard 140 cases (cases.py), run in Denver (all 14 cases, the Standard 140 test) and in
 the 14 validation climates (8 cases). Hourly zone air temperature and ideal loads are kept in WORK/thermal_engine/ep/.
 Usage: python3 ep_run.py [--jobs 2]"""
 import json, os, re, subprocess, sys, glob
 from multiprocessing import Pool
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "lib"))
-from paths import WORK, EPLUS, WX
+from paths import WORK, EPLUS, WX, EP_VERSION
 import climates
 
 D = os.path.join(WORK, "thermal_engine")
@@ -15,7 +15,7 @@ CASES = SPEC["cases"]
 def idf(z):
     Lx, Wy, H = z["dims"]
     A = []; a = A.append
-    a("Version,24.2;")
+    a(f"Version,{EP_VERSION};")
     a("SimulationControl,No,No,No,No,Yes,No,1;")
     a("Building,BESTEST,0,Country,0.04,0.4,FullInteriorAndExterior,25,6;")
     a("Timestep,6;")
@@ -45,6 +45,8 @@ def idf(z):
     a(f"WindowMaterial:Gas,Gap,Air,{g['gap']};")
     a("Construction,WinC,Glass,Gap,Glass;")
     P = {"S": ((0, 0), (Lx, 0)), "E": ((Lx, 0), (Lx, Wy)), "N": ((Lx, Wy), (0, Wy)), "W": ((0, Wy), (0, 0))}
+    OUT = {"S": (0, -1), "E": (1, 0), "N": (0, 1), "W": (-1, 0)}   # outward normal of each wall
+    made, nsh = set(), [0]
     for k, ((x1, y1), (x2, y2)) in P.items():
         a(f"BuildingSurface:Detailed,Wall_{k},Wall,WallC,Z,,Outdoors,,SunExposed,WindExposed,autocalculate,4,{x1},{y1},{H},{x1},{y1},0,{x2},{y2},0,{x2},{y2},{H};")
     a(f"BuildingSurface:Detailed,Roof,Roof,RoofC,Z,,Outdoors,,SunExposed,WindExposed,autocalculate,4,0,{Wy},{H},0,0,{H},{Lx},0,{H},{Lx},{Wy},{H};")
@@ -55,8 +57,20 @@ def idf(z):
         wl = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
         f0, f1 = gm["x0"] / wl, (gm["x0"] + gm["w"]) / wl
         ax, ay, bx, by = x1 + (x2 - x1) * f0, y1 + (y2 - y1) * f0, x1 + (x2 - x1) * f1, y1 + (y2 - y1) * f1
-        zt, zb = gm["z0"] + gm["h"], gm["z0"]
+        fr = gm.get("frame", 0.0)                       # optional opaque frame share of the opening (window diagnostic), above the glass
+        zb, zt, zo = gm["z0"], gm["z0"] + gm["h"] * (1 - fr), gm["z0"] + gm["h"]
         a(f"FenestrationSurface:Detailed,{e['id']},Window,WinC,Wall_{gm['wall']},,autocalculate,,1,4,{ax},{ay},{zt},{ax},{ay},{zb},{bx},{by},{zb},{bx},{by},{zt};")
+        if fr > 0:
+            fa = gm.get("frameAbs", 0.6)                # solar absorptance of the frame, outside and inside
+            if "FrameC" not in made: a(f"Material:NoMass,FrameM,Smooth,{1 / 2.74 - 0.13 - 0.04:.4f},0.9,{fa},{fa};"); a("Construction,FrameC,FrameM;"); made.add("FrameC")
+            a(f"FenestrationSurface:Detailed,{e['id']}_frame,Door,FrameC,Wall_{gm['wall']},,,,1,4,{ax},{ay},{zo},{ax},{ay},{zt},{bx},{by},{zt},{bx},{by},{zo};")
+        if gm.get("reveal"):                             # optional outer reveal of depth d around the glass (window diagnostic)
+            d = gm["reveal"]; nx, ny = OUT[gm["wall"]]
+            q = lambda x, y, zz, k: (x + nx * d * k, y + ny * d * k, zz)
+            for (x1_, y1_, z1_), (x2_, y2_, z2_) in [((ax, ay, zb), (bx, by, zb)), ((ax, ay, zt), (bx, by, zt)), ((ax, ay, zb), (ax, ay, zt)), ((bx, by, zb), (bx, by, zt))]:
+                P4 = [q(x1_, y1_, z1_, 0), q(x2_, y2_, z2_, 0), q(x2_, y2_, z2_, 1), q(x1_, y1_, z1_, 1)]
+                for rev, nm in ((P4, "a"), (P4[::-1], "b")):
+                    nsh[0] += 1; a(f"Shading:Building:Detailed,Rev{nsh[0]}{nm},,4," + ",".join(f"{c:.4f}" for pt in rev for c in pt) + ";")
         if gm.get("overhang"):
             o = gm["overhang"]; a(f"Shading:Overhang,OH_{e['id']},{e['id']},{o['gap']},90,{o['ext']},{o['ext']},{o['dep']};")
     gn = z["gains"]
@@ -76,6 +90,12 @@ def idf(z):
         a("Output:Variable,IL,Zone Ideal Loads Zone Sensible Heating Energy,Hourly;")
         a("Output:Variable,IL,Zone Ideal Loads Zone Sensible Cooling Energy,Hourly;")
     a("Output:Variable,Z,Zone Mean Air Temperature,Hourly;")
+    if z.get("diag"):   # window diagnostic: transmitted sun, and the part of it absorbed at the inside faces of the opaque surfaces
+        a("Output:Variable,*,Enclosure Windows Total Transmitted Solar Radiation Energy,Hourly;")
+        for k in P: a(f"Output:Variable,Wall_{k},Surface Inside Face Solar Radiation Heat Gain Energy,Hourly;")
+        a("Output:Variable,Roof,Surface Inside Face Solar Radiation Heat Gain Energy,Hourly;"); a("Output:Variable,Floor,Surface Inside Face Solar Radiation Heat Gain Energy,Hourly;")
+        for e in z["elements"]:
+            if e["kind"] == "window" and e["geom"].get("frame"): a(f"Output:Variable,{e['id']}_frame,Surface Inside Face Solar Radiation Heat Gain Energy,Hourly;")
     a("Output:Constructions,Constructions;")
     a("OutputControl:Files,Yes,No,No,Yes,Yes,No,Yes,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No;")
     return "\n".join(A) + "\n"

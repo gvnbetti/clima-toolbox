@@ -7,7 +7,12 @@ from paths import WORK
 import climates
 HERE = os.path.dirname(os.path.abspath(__file__)); D = os.path.join(WORK, "thermal_engine")
 SPEC = json.load(open(os.path.join(D, "cases.json")))
-MODELS = {"ep": "EnergyPlus 24.2", "written": "App engine, EN ISO 52016-1 as written", "room": "App engine, settings of Room Clima"}
+MODELS = {"ep": "EnergyPlus 25.2", "written": "App engine, EN ISO 52016-1 as written",
+          "wind": "as written + (1) wind-driven exterior convection", "angle": "as written + (2) angle-dependent glazing transmission",
+          "opaque": "as written + (3) transmitted sun on opaque surfaces only", "sky": "as written + (4) sky long-wave over the root of the sky view",
+          "room": "App engine, settings of Room Clima (1 to 4)"}
+VARS = [m for m in MODELS if m != "ep"]
+MAIN = ("ep", "written", "room")
 
 def load(model, clim, case):
     f = os.path.join(D, "ep" if model == "ep" else os.path.join("js", model), clim, case + ".json")
@@ -63,20 +68,20 @@ for m, label in MODELS.items():
     f = lambda k, u: f"{st.mean(abs(x) for x in dev[k]):.1f}{u} ({st.mean(dev[k]):+.1f})"
     md.append(f"| {label} | {inn} | {f('heat','%')} | {f('cool','%')} | {f('pheat','%')} | {f('pcool','%')} | {f('tmax',' K')} | {f('tmin',' K')} |")
     out["denver"][m] = {"within": inn, "n": n, "outside": miss, "dev": {k: [st.mean(abs(x) for x in v), st.mean(v)] for k, v in dev.items()}}
-md += ["", "Outside the range:", ""] + [f"- {MODELS[m]}: " + ("; ".join(out['denver'][m]['outside']) or "none") for m in MODELS]
+md += ["", "Outside the range:", ""] + [f"- {MODELS[m]}: " + ("; ".join(out['denver'][m]['outside']) or "none") for m in MAIN]
 md += ["", "### Per case", "", "Each cell: EnergyPlus / app engine as written / Room Clima settings; an asterisk marks a value outside the range.", "",
        "| Case | Metric | Range | Values |", "|---|---|---|---|"]
 for (c, metric), d in per_case.items():
     lo, hi = d["ep"][2], d["ep"][3]
-    md.append(f"| {c} | {NAMES[metric]} | {lo} to {hi} | " + " / ".join(f"{d[m][0]:.2f}{'' if d[m][1] else '*'}" for m in MODELS) + " |")
+    md.append(f"| {c} | {NAMES[metric]} | {lo} to {hi} | " + " / ".join(f"{d[m][0]:.2f}{'' if d[m][1] else '*'}" for m in MAIN) + " |")
 
 # Part 2: 14 climates
 md += ["", "## Part 2. Fourteen climates, against EnergyPlus", "",
        "Standard 140 box, cases " + ", ".join(SPEC["climate_cases"]) + ". Heating and cooling: absolute error relative to EnergyPlus where EnergyPlus needs at least 10 kWh/m² a year (0.48 MWh for the 48 m² box). Free-float: difference of the annual maximum and RMSE of the 8,760 hourly air temperatures, free-floating cases. Overheating: degree-hours of air above 26 °C, free-floating cases.", "",
        "| Climate | Köppen | Model | Heating | Cooling | Free-float max | Overheating | Hourly RMSE |", "|---|---|---|---|---|---|---|---|"]
-agg = {m: {"heat": [], "cool": [], "ffmax": [], "oh": [], "rmse": []} for m in ("written", "room")}
+agg = {m: {"heat": [], "cool": [], "ffmax": [], "oh": [], "rmse": []} for m in VARS}
 for clim in climates.CLIMATES:
-    for m in ("written", "room"):
+    for m in VARS:
         e = {"heat": [], "cool": [], "ffmax": [], "oh": [], "rmse": []}
         for c in SPEC["climate_cases"]:
             E, J = load("ep", clim, c), load(m, clim, c)
@@ -91,10 +96,10 @@ for clim in climates.CLIMATES:
                 e["rmse"].append(math.sqrt(sum((a - b) ** 2 for a, b in zip(J["tair"], E["tair"])) / 8760))
         for k in e: agg[m][k] += e[k]
         fmt = lambda a, u: (f"{st.mean(abs(x) for x in a):.1f}{u} ({st.mean(a):+.1f})" if a else "–")
-        md.append(f"| {clim.replace('_', ' ').title()} | {climates.KOPPEN[clim]} | {'as written' if m == 'written' else 'Room Clima'} | {fmt(e['heat'], '%')} | {fmt(e['cool'], '%')} | {fmt(e['ffmax'], ' K')} | {fmt(e['oh'], '%')} | {st.mean(e['rmse']):.2f} K |")
+        if m in MAIN: md.append(f"| {clim.replace('_', ' ').title()} | {climates.KOPPEN[clim]} | {'as written' if m == 'written' else 'Room Clima'} | {fmt(e['heat'], '%')} | {fmt(e['cool'], '%')} | {fmt(e['ffmax'], ' K')} | {fmt(e['oh'], '%')} | {st.mean(e['rmse']):.2f} K |")
         out["climates"].setdefault(clim, {})[m] = e
-md += ["", "All climates:", "", "| Model | Heating | Cooling | Free-float max | Overheating | Hourly RMSE |", "|---|---|---|---|---|---|"]
-for m in ("written", "room"):
+md += ["", "All climates, each change alone and all together:", "", "| Model | Heating | Cooling | Free-float max | Overheating | Hourly RMSE |", "|---|---|---|---|---|---|"]
+for m in VARS:
     a = agg[m]; fmt = lambda x, u: f"{st.mean(abs(v) for v in x):.1f}{u} ({st.mean(x):+.1f})"
     md.append(f"| {MODELS[m]} | {fmt(a['heat'], '%')} | {fmt(a['cool'], '%')} | {fmt(a['ffmax'], ' K')} | {fmt(a['oh'], '%')} | {st.mean(a['rmse']):.2f} K |")
     out["all_" + m] = {k: [st.mean(abs(v) for v in x), st.mean(x)] for k, x in a.items()}

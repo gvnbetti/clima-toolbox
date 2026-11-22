@@ -1,4 +1,4 @@
-"""Room types, step 2: EnergyPlus 24.2 models of the cases written by dump.js: the same constructions, windows, reveal and
+"""Room types, step 2: EnergyPlus 25.2 models of the cases written by dump.js: the same constructions, windows, reveal and
 outdoor shading as the app, with the app's operation imposed hour by hour from its own run:
 air change (window openings by EN 16798-7, base air), blind state per window (switchable glazing: SHGC g x F_C,
 U with the blind's added resistance), internal gains (100% convective). Free-running and heated.
@@ -7,8 +7,8 @@ import json, math, os, subprocess, sys
 import pandas as pd
 from multiprocessing import Pool
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'lib'))
-from paths import WORK, EPLUS as EP, WX
-R = os.path.join(WORK, 'room_types')
+from paths import WORK, EPLUS as EP, WX, EP_VERSION
+R = os.path.join(WORK, 'room_types_holdout' if os.environ.get('SET') == 'holdout' else 'room_types')   # SET=holdout: the held-out climates
 CASES = json.load(open(f'{R}/cases.json'))
 RSI, RSE = 0.13, 0.04
 def idf(c, heat, d):
@@ -18,7 +18,7 @@ def idf(c, heat, d):
         pts = [[o[i] + v[i]*Lv for i in range(3)], o, [o[i] + u[i]*Lu for i in range(3)], [o[i] + u[i]*Lu + v[i]*Lv for i in range(3)]]
         return ",".join(P(p) for p in pts)
     L = []; A = L.append
-    A("Version,24.2;"); A("SimulationControl,No,No,No,No,Yes,No,1;")
+    A(f"Version,{EP_VERSION};"); A("SimulationControl,No,No,No,No,Yes,No,1;")
     A("Building,Room,0,Suburbs,0.04,0.4,FullInteriorAndExterior,25,6;"); A("Timestep,6;")
     A("ShadowCalculation,PolygonClipping,Periodic,7,15000;")
     A("GlobalGeometryRules,UpperLeftCorner,Counterclockwise,World;")

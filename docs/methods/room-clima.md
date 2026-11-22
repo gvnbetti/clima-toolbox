@@ -37,7 +37,7 @@ transfer through the building elements, ventilation and heating or cooling syste
 | Sun position | NOAA solar calculator at the middle of each hour, from the calculation core shared with Macro and Micro Clima. Used by the thermal and the daylight model alike. | NOAA Global Monitoring Laboratory (n.d.); Meeus (1998); shared core; validation/climate-reading/ |
 | Solar radiation on the facade | Perez 1990 transposition model, with ground albedo of 0.2. | Perez et al. (1990); shared core with Macro Clima; validation/climate-reading/ |
 | Shading | Hourly calculation of the sunlit fraction of the glazing, accounting for overhangs, fins, frames and window reveals. Uses the same geometry as the daylight model. | Geometric calculation; validation/thermal/room-types/ |
-| Room settings | Exterior convective heat transfer based on station wind using the DOE-2 correlation; glazing transmission adjusted for angle of incidence; transmitted solar radiation distributed over opaque internal surfaces only. | U.S. Department of Energy (2024); modelling decisions; validation/thermal/README.md |
+| Room settings | Four changes to EN ISO 52016-1: exterior convective heat transfer based on station wind using the DOE-2 correlation; glazing transmission adjusted for angle of incidence; transmitted solar radiation distributed over opaque internal surfaces only; long-wave exchange with the sky over the square root of the sky view factor, as in EnergyPlus. | U.S. Department of Energy (2024); Walton (1983); modelling decisions; validation/thermal/README.md |
 | Internal gains and schedules | DIN 4108-2, clause 8.4.2: 100 Wh/m² per day for residential spaces and 144 Wh/m² per day for non-residential spaces. | DIN 4108-2 (DIN, 2013) |
 | Heating and cooling | Ideal heating and cooling, with heat pump efficiencies used to calculate delivered energy. | Register: score.energy |
 | Ventilation through windows | Hourly airflow calculated using the EN 16798-7 single-sided ventilation method, based on effective opening area, sash height and indoor-outdoor temperature difference. Wind is not credited because site-specific wind conditions are unknown at concept stage. The method is therefore deliberately conservative. The openable sash is assumed to be half the window area. | EN 16798-7 (CEN, 2017) |
@@ -175,10 +175,10 @@ stage.
 Delivered energy and associated operational carbon are calculated from the corresponding system efficiencies.
 
 ## Limits
-**Thermal model accuracy.** The hourly model is calibrated and evaluated using Room Clima's own room configurations
-and reference simulations. In the ASHRAE Standard 140 test box, it falls within 32 of the 44 reported ranges and
-overestimates cooling by 12.7%. For Room Clima's own room configurations, hourly results agree with EnergyPlus within
-0.7 K.
+**Thermal model accuracy.** The settings of the hourly model were chosen on Room Clima's own rooms in the six bundled
+climates and tested again in eight climates not used for that choice. In those rooms, hourly results agree with
+EnergyPlus within 0.69 K and 0.75 K (RMSE), about 0.5 K on the cool side, and the two rank designs alike. In the ASHRAE
+Standard 140 test box, the model falls within 32 of the 44 reported ranges and overestimates cooling by 12.7 %.
 
 **Blinds.** Venetian blinds are represented as a diffusing optical layer in the daylight calculation. The
 angle-dependent behaviour of individual slats is not modelled.
@@ -194,8 +194,8 @@ The calculation modules have been checked against established simulation tools, 
 
 | Part | Validation reference |
 |---|---|
-| Thermal engine | ASHRAE Standard 140 and EnergyPlus, across 14 climates. [validation/thermal/engine/](../../validation/thermal/engine/) |
-| Room configurations | Comparison with EnergyPlus across 432 cases. [validation/thermal/room-types/](../../validation/thermal/room-types/) |
+| Thermal engine | ASHRAE Standard 140 and EnergyPlus, across 14 climates; the standard as written and each change on its own. [validation/thermal/engine/](../../validation/thermal/engine/) |
+| Room configurations | Comparison with EnergyPlus: 432 rooms in the six climates where the settings were chosen, 576 in eight held-out climates. [validation/thermal/room-types/](../../validation/thermal/room-types/) |
 | Daylight and blinds | Comparison with Radiance. [validation/daylight/](../../validation/daylight/) |
 | Future climate and urban heat island | Reference climate data and independent model implementations. [validation/future-climate/](../../validation/future-climate/), [validation/urban-heat-island/](../../validation/urban-heat-island/) |
 
@@ -203,7 +203,7 @@ These comparisons assess the implementation of the models and their agreement wi
 do not replace validation against measured performance in occupied buildings.
 
 ## References
-<!-- refs: iso52016 ashrae140 crawley2001 noaa meeus1998 perez1990 usdoe2024 din4108 cen16798_7 asr36 cen16798_1 cen14240 ashrae55 dedear1998 dinNA cen15251 bbsr2017 bourgeois2008 tregenza1987 perez1993 ward1994 larson1998 nabil2005 cen17037 -->
+<!-- refs: iso52016 ashrae140 crawley2001 noaa meeus1998 perez1990 usdoe2024 din4108 cen16798_7 asr36 cen16798_1 cen14240 ashrae55 dedear1998 dinNA cen15251 bbsr2017 bourgeois2008 tregenza1987 perez1993 ward1994 larson1998 nabil2005 cen17037 walton1983 -->
 
 ASHRAE. (2020a). *ANSI/ASHRAE Standard 140-2020: Method of test for evaluating building performance simulation software*. American Society of Heating, Refrigerating and Air-Conditioning Engineers.
 
@@ -250,5 +250,7 @@ Perez, R., Seals, R., & Michalsky, J. (1993). All-weather model for sky luminanc
 Tregenza, P. R. (1987). Subdivision of the sky hemisphere for luminance measurements. *Lighting Research & Technology, 19*(1), 13–14. https://doi.org/10.1177/096032718701900103
 
 U.S. Department of Energy. (2024). *EnergyPlus version 24.2 documentation: Engineering reference; Auxiliary programs*. https://energyplus.net/documentation
+
+Walton, G. N. (1983). *Thermal analysis research program reference manual* (NBSIR 83-2655). National Bureau of Standards.
 
 Ward, G. J. (1994). The RADIANCE lighting simulation and rendering system. In *Proceedings of the 21st Annual Conference on Computer Graphics and Interactive Techniques (SIGGRAPH '94)* (pp. 459–472). ACM. https://doi.org/10.1145/192161.192286
