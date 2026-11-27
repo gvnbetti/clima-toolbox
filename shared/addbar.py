@@ -18,9 +18,9 @@ GLYPH = {
     'room': ARC + f'<path d="M50 43V38H14V56H50V51" {S}/>',
     'morph': ARC + f'<path d="M6 56H58M32 50V40M25 46L32 39L39 46" {S}/>',
 }
-APPS = [('map', 'Clima Map', 'map/index.html', 'Find a weather file'), ('macro', 'Macro Clima', 'macro/index.html', 'Read the climate'),
-        ('micro', 'Micro Clima', 'micro/index.html', 'Outdoor comfort'), ('room', 'Room Clima', 'room/build/index.html', 'Room and facade'),
-        ('morph', 'Clima Morph', 'morph/index.html', 'Export a future or urban weather file')]
+APPS = [('map', 'Clima Map', 'map/index.html', 'Find a weather file'), ('morph', 'Clima Morph', 'morph/index.html', 'Export a future or urban weather file'),
+        ('macro', 'Macro Clima', 'macro/index.html', 'Read the climate'), ('micro', 'Micro Clima', 'micro/index.html', 'Outdoor comfort'),
+        ('room', 'Room Clima', 'room/build/index.html', 'Room and facade')]
 svg = lambda k, s: f'<svg width="{s}" height="{s}" viewBox="0 0 64 64" aria-hidden="true">{GLYPH[k]}</svg>'
 
 CSS = '''<style>

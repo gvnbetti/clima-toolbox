@@ -1,7 +1,6 @@
 """Writes the landing page (index.html at the repository root) for Clima Toolbox.
-The five previews are drawn from real data in the repository: the station catalogue (Clima Map), the Berlin weather
-file (Macro Clima), the Rome weather file (Micro Clima), the sun angles of Mannheim (Room Clima) and Berlin morphed
-by Clima Morph itself (morph/preview.json, written by node morph/mkpreview.js).
+The five previews are drawn from real data in the repository: the station catalogue (Clima Map), Berlin morphed by Clima Morph
+itself, the Berlin weather file (Macro Clima), the Rome weather file (Micro Clima) and the sun angles of Mannheim (Room Clima) (morph/preview.json, written by node morph/mkpreview.js).
 Usage: python3 shared/mklanding.py   (from the repository root)"""
 import json, base64, gzip, math, pathlib, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -123,6 +122,9 @@ CARDS = [
     ('map', 'Clima', 'Map', 'map/index.html', 'Finds the weather file.',
      'Some 30,000 weather stations with 67,000 typical-year files. Search a place or click the map; the nearest stations come with their elevation and climate type, and each file downloads in one click.',
      ['Typical years from recent periods', 'Nearest stations to any point', 'Climate type of each station']),
+    ('morph', 'Clima', 'Morph', 'morph/index.html', 'Exports the weather file.',
+     'The future climate and the urban heat island of the toolbox, written into the weather file itself. The download is a valid EPW file for EnergyPlus, Ladybug and other simulation tools, with the same hours as in Macro, Micro and Room Clima.',
+     ['+1.5, +2 and +3 °C of global warming', 'Urban heat island', 'Read by EnergyPlus and Ladybug']),
     ('macro', 'Macro', 'Clima', 'macro/index.html', 'Reads the weather file.',
      'What the climate asks of a building: temperature and humidity through the year, sun, wind, sky, rain, comfort and the strategies that suit it, with the climate at +1.5, +2 and +3 °C of global warming and the urban heat island.',
      ['Comfort, sun, wind, rain', 'Future climate after IPCC AR6', 'Urban heat island']),
@@ -132,11 +134,8 @@ CARDS = [
     ('room', 'Room', 'Clima', 'room/build/index.html', 'Room and facade.',
      'What to build, facade by facade: window size, glazing, shading, ventilation, mass and fans searched against daylight, overheating, energy and whole-life carbon, with the DIN 4108-2 summer check.',
      ['Hourly ISO 52016-1 room model', 'Checked against EnergyPlus and Radiance', 'Packages that meet every target']),
-    ('morph', 'Clima', 'Morph', 'morph/index.html', 'Exports the weather file.',
-     'The future climate and the urban heat island of the toolbox, written into the weather file itself. The download is a valid EPW file for EnergyPlus, Ladybug and other simulation tools, with the same hours as in Macro, Micro and Room Clima.',
-     ['+1.5, +2 and +3 °C of global warming', 'Urban heat island', 'Read by EnergyPlus and Ladybug']),
 ]
-FLOW = [('map', 'Map'), ('macro', 'Macro'), ('micro', 'Micro'), ('room', 'Room'), ('morph', 'Morph')]
+FLOW = [('map', 'Map'), ('morph', 'Morph'), ('macro', 'Macro'), ('micro', 'Micro'), ('room', 'Room')]
 svg = lambda k, s: f'<svg width="{s}" height="{s}" viewBox="0 0 64 64" aria-hidden="true">{A.GLYPH[k].replace("4.5", "3")}</svg>'
 
 cards = ''.join(f'''
@@ -158,7 +157,7 @@ page = f'''<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Clima Toolbox: open climate tools for early design</title>
-<meta name="description" content="Five browser tools that carry one weather file from the map to the window and beyond: Clima Map, Macro Clima, Micro Clima, Room Clima and Clima Morph.">
+<meta name="description" content="Five browser tools that carry one weather file from the map to the window and beyond: Clima Map, Clima Morph, Macro Clima, Micro Clima and Room Clima.">
 <link rel="icon" href="shared/icons/toolbox.svg" type="image/svg+xml">
 <link rel="stylesheet" href="shared/fonts/fonts.css">
 <style>

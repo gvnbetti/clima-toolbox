@@ -5,9 +5,9 @@ Five browser tools for climate analysis and design guidance at the early stage o
 | App | What it does | Folder | Published as |
 | --- | --- | --- | --- |
 | Clima Map | Finds a weather file: about 30,000 stations and 67,000 files on a map, nearest stations to any point, one-click download | `map/` | GitHub Pages only (map tiles) |
+| Clima Morph | Writes the future climate and the urban heat island into a valid EPW file, for EnergyPlus, Ladybug and other tools | `morph/` | GitHub Pages only |
 | Macro Clima | Climate analysis of a weather file: comfort, solar, wind, future climate, urban heat island | `macro/` | Claude artifact (multi-file) |
 | Micro Clima | Site and street-scale climate: outdoor comfort, shading, heat island, future climate | `micro/` | Claude artifact (single file) |
-| Clima Morph | Writes the future climate and the urban heat island into a valid EPW file, for EnergyPlus, Ladybug and other tools | `morph/` | GitHub Pages only |
 | Room Clima | Room and facade guidance: searches window size, glazing, shading, ventilation, mass and fans against daylight, comfort, energy and carbon targets; DIN 4108-2 summer check | `room/` | Claude artifact, v16 |
 
 Live: https://gvnbetti.github.io/clima-toolbox/ (the apps run in the browser; nothing leaves it unless you use the optional AI assistant with your own API key).
