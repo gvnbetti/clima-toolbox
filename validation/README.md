@@ -12,10 +12,11 @@ results; the scripts that produce them; and the result files they write. Every s
 | Climate reading: sun, surfaces, psychrometrics, UTCI, adaptive comfort | Macro Clima | pvlib (Holmgren et al., 2018), psychrolib (Meyer & Thevenard, 2019), pythermalcomfort (Tartarini & Schiavon, 2020) | sun within 0.02°; surfaces within 0.2 %; psychrometrics and UTCI identical | `climate-reading/` |
 | Future climate | Macro, Micro, Room Clima | IPCC AR6 Atlas data (Iturbide et al., 2021); official regions (Iturbide et al., 2020); pyepwmorph (McCarty, n.d.) after Belcher et al. (2005) | table within 0.05 K on average; region 99.99 %; morphing equal on the annual mean, dew point within 0.01 K | `future-climate/` |
 | Urban heat island | Macro, Micro, Room Clima | Theeuwes et al. (2017), independent implementation | identical within 0.0001 K; the three apps share one implementation | `urban-heat-island/` |
+| Exported weather file | Clima Morph | the shared core's hourly values read back; EnergyPlus 24.2 (U.S. Department of Energy, 2024); Ladybug (Sadeghipour Roudsari & Pak, 2013) | file within its rounding (0.05 °C, 0.5 %, 0.5 W/m²) in every hour; unchanged fields byte for byte; EnergyPlus and Ladybug read all 12 files | `clima-morph/` |
 | Outdoor comfort | Micro Clima | pvlib, pythermalcomfort, exact solutions; Ladybug Tools (Sadeghipour Roudsari & Pak, 2013) | UTCI identical, SolarCal within 0.06 K; sun within 0.02°; ranking of 70 designs 0.97 against Ladybug | `outdoor-comfort/` |
 
 ## Shared calculation core
-Since 21 November 2026 Macro, Micro and Room Clima compute sun position, sun on surfaces (Perez et al., 1990), psychrometrics,
+Since 21 November 2026 Macro, Micro and Room Clima (and, from 27 November 2026, Clima Morph) compute sun position, sun on surfaces (Perez et al., 1990), psychrometrics,
 SolarCal, sky longwave (file data, or Clark and Allen (1978) where missing), UTCI (inputs outside the polynomial's range held at
 its edge), future climate and the urban heat island with the same code, `shared/climamods.js`, copied verbatim from
 Macro Clima. The studies it affects (thermal, room types, daylight, climate reading, outdoor comfort, urban heat island)
@@ -23,7 +24,7 @@ were rerun on that code on 21 November 2026; the future-climate code itself did 
 
 ## Known limits
 - Future climate: the shipped table differs from the reconstructed calculation by 0.05 K on average and up to about
-  0.5 K in single months; monthly mean shifts are up to 0.18 K off after morphing; sky infrared rises by 10.4 W/m²
+  0.5 K in single months; monthly mean shifts are up to 0.18 K off after morphing, entirely from the blending of the monthly change between mid-month points (confirmed in `clima-morph/`); sky infrared rises by 10.4 W/m²
   where pyepwmorph gives 12.8 W/m². Corrections are under review.
 - Room Clima's hourly model is set for its own rooms: in the Standard 140 test box it reaches 32 of 44 ranges and
   overestimates cooling by 12.7 %. In its rooms the settings hold in eight climates not used to choose them.

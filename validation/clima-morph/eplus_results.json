@@ -1,0 +1,183 @@
+{
+ "energyplus": "EnergyPlus-24.2.0-94a887817b-Linux-Ubuntu24.04-x86_64",
+ "idf": "1ZoneUncontrolled.idf",
+ "pass": true,
+ "files": {
+  "DEU_BE_Berlin-Tegel.AP.103820_TMYx_+2C.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 3,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 12.248,
+    "hours": 8760
+   }
+  },
+  "DEU_BE_Berlin-Tegel.AP.103820_TMYx_+3C_dense.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 3,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 15.355,
+    "hours": 8760
+   }
+  },
+  "DEU_BE_Berlin-Tegel.AP.103820_TMYx_urban.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 3,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 12.535,
+    "hours": 8760
+   }
+  },
+  "EGY_QH_Cairo.Intl.AP.623660_TMYx_+2C.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 3,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 24.251,
+    "hours": 8760
+   }
+  },
+  "EGY_QH_Cairo.Intl.AP.623660_TMYx_+3C_dense.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 3,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 28.266,
+    "hours": 8760
+   }
+  },
+  "EGY_QH_Cairo.Intl.AP.623660_TMYx_urban.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 3,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 25.487,
+    "hours": 8760
+   }
+  },
+  "RUS_MOS_Moscow-Bibirevo.276120_TMYx_+2C.epw": {
+   "ok": true,
+   "warnings": 5,
+   "severe": 0,
+   "source_warnings": 6,
+   "new_psychrometric_warnings": [
+    "** Warning ** Temperature out of range [-100. to 200.] (PsyPsatFnTemp)"
+   ],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [
+    "** Warning ** WetBulb not converged after 101 iterations(PsyTwbFnTdbWPb)"
+   ],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 7.903,
+    "hours": 8760
+   }
+  },
+  "RUS_MOS_Moscow-Bibirevo.276120_TMYx_+3C_dense.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 6,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [
+    "** Warning ** WetBulb not converged after 101 iterations(PsyTwbFnTdbWPb)"
+   ],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 10.993,
+    "hours": 8760
+   }
+  },
+  "RUS_MOS_Moscow-Bibirevo.276120_TMYx_urban.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 6,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [
+    "** Warning ** WetBulb not converged after 101 iterations(PsyTwbFnTdbWPb)"
+   ],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 8.259,
+    "hours": 8760
+   }
+  },
+  "SGP_SG_Singapore-Changi.Intl.AP.486980_Custom_+2C.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 3,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 28.818,
+    "hours": 8760
+   }
+  },
+  "SGP_SG_Singapore-Changi.Intl.AP.486980_Custom_+3C_dense.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 3,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 31.704,
+    "hours": 8760
+   }
+  },
+  "SGP_SG_Singapore-Changi.Intl.AP.486980_Custom_urban.epw": {
+   "ok": true,
+   "warnings": 3,
+   "severe": 0,
+   "source_warnings": 3,
+   "new_psychrometric_warnings": [],
+   "new_warnings": [],
+   "source_psychrometric_warnings": [],
+   "ladybug": {
+    "ok": true,
+    "mean_dry_bulb_C": 29.487,
+    "hours": 8760
+   }
+  }
+ }
+}

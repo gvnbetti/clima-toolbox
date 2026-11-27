@@ -1,0 +1,801 @@
+{
+ "files": {
+  "DEU_BE_Berlin-Tegel.AP.103820_TMYx.epw": {
+   "identity": true,
+   "cases": {
+    "fut2": {
+     "file": "DEU_BE_Berlin-Tegel.AP.103820_TMYx_+2C.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.049951010406994456,
+      "dpt": 0.04999841954183348,
+      "rh": 0,
+      "hir": 0.49997675272885544
+     },
+     "rhHeldMax": 0,
+     "monthly": [
+      {
+       "month": 1,
+       "applied": 1.254,
+       "atlas": 1.299,
+       "diff": -0.045
+      },
+      {
+       "month": 2,
+       "applied": 1.142,
+       "atlas": 1.096,
+       "diff": 0.046
+      },
+      {
+       "month": 3,
+       "applied": 1.217,
+       "atlas": 1.28,
+       "diff": -0.063
+      },
+      {
+       "month": 4,
+       "applied": 1.02,
+       "atlas": 0.971,
+       "diff": 0.049
+      },
+      {
+       "month": 5,
+       "applied": 1.063,
+       "atlas": 1.064,
+       "diff": -0.001
+      },
+      {
+       "month": 6,
+       "applied": 1.179,
+       "atlas": 1.147,
+       "diff": 0.032
+      },
+      {
+       "month": 7,
+       "applied": 1.431,
+       "atlas": 1.487,
+       "diff": -0.056
+      },
+      {
+       "month": 8,
+       "applied": 1.381,
+       "atlas": 1.385,
+       "diff": -0.004
+      },
+      {
+       "month": 9,
+       "applied": 1.246,
+       "atlas": 1.253,
+       "diff": -0.007
+      },
+      {
+       "month": 10,
+       "applied": 1.082,
+       "atlas": 1.067,
+       "diff": 0.015
+      },
+      {
+       "month": 11,
+       "applied": 1.025,
+       "atlas": 0.997,
+       "diff": 0.028
+      },
+      {
+       "month": 12,
+       "applied": 1.151,
+       "atlas": 1.153,
+       "diff": -0.002
+      }
+     ],
+     "monthlyMaxDiff": 0.063,
+     "annualChange": 1.184
+    },
+    "urban": {
+     "file": "DEU_BE_Berlin-Tegel.AP.103820_TMYx_urban.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.049994468688964844,
+      "dpt": 0,
+      "rh": 0.49994862650655136,
+      "hir": 0
+     },
+     "dptHeldMax": 0,
+     "uhi": {
+      "mean": 1.47,
+      "nightMean": 2.06,
+      "max": 6.424
+     }
+    },
+    "fut3_dense": {
+     "file": "DEU_BE_Berlin-Tegel.AP.103820_TMYx_+3C_dense.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.04999718966249489,
+      "dpt": 0.04999785754274333,
+      "rh": 0.49997811055479247,
+      "hir": 0.4999054797302733
+     },
+     "monthly": [
+      {
+       "month": 1,
+       "applied": 2.555,
+       "atlas": 2.599,
+       "diff": -0.044
+      },
+      {
+       "month": 2,
+       "applied": 2.354,
+       "atlas": 2.316,
+       "diff": 0.038
+      },
+      {
+       "month": 3,
+       "applied": 2.297,
+       "atlas": 2.35,
+       "diff": -0.053
+      },
+      {
+       "month": 4,
+       "applied": 2.02,
+       "atlas": 1.971,
+       "diff": 0.049
+      },
+      {
+       "month": 5,
+       "applied": 2.049,
+       "atlas": 1.994,
+       "diff": 0.055
+      },
+      {
+       "month": 6,
+       "applied": 2.454,
+       "atlas": 2.447,
+       "diff": 0.007
+      },
+      {
+       "month": 7,
+       "applied": 2.895,
+       "atlas": 2.957,
+       "diff": -0.062
+      },
+      {
+       "month": 8,
+       "applied": 2.936,
+       "atlas": 2.975,
+       "diff": -0.039
+      },
+      {
+       "month": 9,
+       "applied": 2.69,
+       "atlas": 2.683,
+       "diff": 0.007
+      },
+      {
+       "month": 10,
+       "applied": 2.436,
+       "atlas": 2.447,
+       "diff": -0.011
+      },
+      {
+       "month": 11,
+       "applied": 2.217,
+       "atlas": 2.127,
+       "diff": 0.09
+      },
+      {
+       "month": 12,
+       "applied": 2.497,
+       "atlas": 2.543,
+       "diff": -0.046
+      }
+     ],
+     "monthlyMaxDiff": 0.09,
+     "annualChange": 2.452,
+     "uhi": {
+      "mean": 1.837,
+      "nightMean": 2.575,
+      "max": 8.032
+     }
+    }
+   }
+  },
+  "EGY_QH_Cairo.Intl.AP.623660_TMYx.epw": {
+   "identity": true,
+   "cases": {
+    "fut2": {
+     "file": "EGY_QH_Cairo.Intl.AP.623660_TMYx_+2C.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.049508959660766294,
+      "dpt": 0.04999837150395603,
+      "rh": 0,
+      "hir": 0.4999331722070792
+     },
+     "rhHeldMax": 0,
+     "monthly": [
+      {
+       "month": 1,
+       "applied": 0.744,
+       "atlas": 0.746,
+       "diff": -0.002
+      },
+      {
+       "month": 2,
+       "applied": 0.674,
+       "atlas": 0.64,
+       "diff": 0.034
+      },
+      {
+       "month": 3,
+       "applied": 0.801,
+       "atlas": 0.822,
+       "diff": -0.021
+      },
+      {
+       "month": 4,
+       "applied": 0.855,
+       "atlas": 0.848,
+       "diff": 0.007
+      },
+      {
+       "month": 5,
+       "applied": 0.952,
+       "atlas": 0.934,
+       "diff": 0.018
+      },
+      {
+       "month": 6,
+       "applied": 1.153,
+       "atlas": 1.16,
+       "diff": -0.007
+      },
+      {
+       "month": 7,
+       "applied": 1.3,
+       "atlas": 1.33,
+       "diff": -0.03
+      },
+      {
+       "month": 8,
+       "applied": 1.271,
+       "atlas": 1.26,
+       "diff": 0.011
+      },
+      {
+       "month": 9,
+       "applied": 1.239,
+       "atlas": 1.274,
+       "diff": -0.035
+      },
+      {
+       "month": 10,
+       "applied": 1.02,
+       "atlas": 1,
+       "diff": 0.02
+      },
+      {
+       "month": 11,
+       "applied": 0.895,
+       "atlas": 0.886,
+       "diff": 0.009
+      },
+      {
+       "month": 12,
+       "applied": 0.837,
+       "atlas": 0.844,
+       "diff": -0.007
+      }
+     ],
+     "monthlyMaxDiff": 0.035,
+     "annualChange": 0.98
+    },
+    "urban": {
+     "file": "EGY_QH_Cairo.Intl.AP.623660_TMYx_urban.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.04999804496765137,
+      "dpt": 0,
+      "rh": 0.49997681970152286,
+      "hir": 0
+     },
+     "dptHeldMax": 0,
+     "uhi": {
+      "mean": 2.219,
+      "nightMean": 3.27,
+      "max": 5.573
+     }
+    },
+    "fut3_dense": {
+     "file": "EGY_QH_Cairo.Intl.AP.623660_TMYx_+3C_dense.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.04999461947894446,
+      "dpt": 0.04999671099131309,
+      "rh": 0.4999597002680005,
+      "hir": 0.4999796886286276
+     },
+     "monthly": [
+      {
+       "month": 1,
+       "applied": 1.742,
+       "atlas": 1.746,
+       "diff": -0.004
+      },
+      {
+       "month": 2,
+       "applied": 1.672,
+       "atlas": 1.65,
+       "diff": 0.022
+      },
+      {
+       "month": 3,
+       "applied": 1.755,
+       "atlas": 1.742,
+       "diff": 0.013
+      },
+      {
+       "month": 4,
+       "applied": 1.952,
+       "atlas": 1.938,
+       "diff": 0.014
+      },
+      {
+       "month": 5,
+       "applied": 2.234,
+       "atlas": 2.244,
+       "diff": -0.01
+      },
+      {
+       "month": 6,
+       "applied": 2.495,
+       "atlas": 2.47,
+       "diff": 0.025
+      },
+      {
+       "month": 7,
+       "applied": 2.848,
+       "atlas": 2.9,
+       "diff": -0.052
+      },
+      {
+       "month": 8,
+       "applied": 2.908,
+       "atlas": 2.92,
+       "diff": -0.012
+      },
+      {
+       "month": 9,
+       "applied": 2.794,
+       "atlas": 2.844,
+       "diff": -0.05
+      },
+      {
+       "month": 10,
+       "applied": 2.378,
+       "atlas": 2.36,
+       "diff": 0.018
+      },
+      {
+       "month": 11,
+       "applied": 2.033,
+       "atlas": 2.016,
+       "diff": 0.017
+      },
+      {
+       "month": 12,
+       "applied": 1.831,
+       "atlas": 1.814,
+       "diff": 0.017
+      }
+     ],
+     "monthlyMaxDiff": 0.052,
+     "annualChange": 2.224,
+     "uhi": {
+      "mean": 2.773,
+      "nightMean": 4.087,
+      "max": 6.965
+     }
+    }
+   }
+  },
+  "SGP_SG_Singapore-Changi.Intl.AP.486980_Custom.epw": {
+   "identity": true,
+   "cases": {
+    "fut2": {
+     "file": "SGP_SG_Singapore-Changi.Intl.AP.486980_Custom_+2C.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.04987096774193489,
+      "dpt": 0.04998873887201327,
+      "rh": 0,
+      "hir": 0.49999964220103266
+     },
+     "rhHeldMax": 0,
+     "monthly": [
+      {
+       "month": 1,
+       "applied": 0.957,
+       "atlas": 0.978,
+       "diff": -0.021
+      },
+      {
+       "month": 2,
+       "applied": 0.886,
+       "atlas": 0.866,
+       "diff": 0.02
+      },
+      {
+       "month": 3,
+       "applied": 0.92,
+       "atlas": 0.926,
+       "diff": -0.006
+      },
+      {
+       "month": 4,
+       "applied": 0.94,
+       "atlas": 0.938,
+       "diff": 0.002
+      },
+      {
+       "month": 5,
+       "applied": 0.959,
+       "atlas": 0.966,
+       "diff": -0.007
+      },
+      {
+       "month": 6,
+       "applied": 0.936,
+       "atlas": 0.94,
+       "diff": -0.004
+      },
+      {
+       "month": 7,
+       "applied": 0.887,
+       "atlas": 0.878,
+       "diff": 0.009
+      },
+      {
+       "month": 8,
+       "applied": 0.89,
+       "atlas": 0.886,
+       "diff": 0.004
+      },
+      {
+       "month": 9,
+       "applied": 0.918,
+       "atlas": 0.928,
+       "diff": -0.01
+      },
+      {
+       "month": 10,
+       "applied": 0.899,
+       "atlas": 0.886,
+       "diff": 0.013
+      },
+      {
+       "month": 11,
+       "applied": 0.937,
+       "atlas": 0.946,
+       "diff": -0.009
+      },
+      {
+       "month": 12,
+       "applied": 0.938,
+       "atlas": 0.93,
+       "diff": 0.008
+      }
+     ],
+     "monthlyMaxDiff": 0.021,
+     "annualChange": 0.922
+    },
+    "urban": {
+     "file": "SGP_SG_Singapore-Changi.Intl.AP.486980_Custom_urban.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.0499977171421051,
+      "dpt": 0,
+      "rh": 0.4999734045560871,
+      "hir": 0
+     },
+     "dptHeldMax": 0,
+     "uhi": {
+      "mean": 1.586,
+      "nightMean": 2.356,
+      "max": 3.837
+     }
+    },
+    "fut3_dense": {
+     "file": "SGP_SG_Singapore-Changi.Intl.AP.486980_Custom_+3C_dense.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.04999986580879323,
+      "dpt": 0.04999329299328181,
+      "rh": 0.4999751734312099,
+      "hir": 0.4999404877504503
+     },
+     "monthly": [
+      {
+       "month": 1,
+       "applied": 1.801,
+       "atlas": 1.808,
+       "diff": -0.007
+      },
+      {
+       "month": 2,
+       "applied": 1.768,
+       "atlas": 1.756,
+       "diff": 0.012
+      },
+      {
+       "month": 3,
+       "applied": 1.809,
+       "atlas": 1.806,
+       "diff": 0.003
+      },
+      {
+       "month": 4,
+       "applied": 1.871,
+       "atlas": 1.878,
+       "diff": -0.007
+      },
+      {
+       "month": 5,
+       "applied": 1.893,
+       "atlas": 1.896,
+       "diff": -0.003
+      },
+      {
+       "month": 6,
+       "applied": 1.879,
+       "atlas": 1.89,
+       "diff": -0.011
+      },
+      {
+       "month": 7,
+       "applied": 1.807,
+       "atlas": 1.798,
+       "diff": 0.009
+      },
+      {
+       "month": 8,
+       "applied": 1.778,
+       "atlas": 1.776,
+       "diff": 0.002
+      },
+      {
+       "month": 9,
+       "applied": 1.774,
+       "atlas": 1.768,
+       "diff": 0.006
+      },
+      {
+       "month": 10,
+       "applied": 1.809,
+       "atlas": 1.806,
+       "diff": 0.003
+      },
+      {
+       "month": 11,
+       "applied": 1.852,
+       "atlas": 1.866,
+       "diff": -0.014
+      },
+      {
+       "month": 12,
+       "applied": 1.817,
+       "atlas": 1.81,
+       "diff": 0.007
+      }
+     ],
+     "monthlyMaxDiff": 0.014,
+     "annualChange": 1.822,
+     "uhi": {
+      "mean": 1.983,
+      "nightMean": 2.946,
+      "max": 4.796
+     }
+    }
+   }
+  },
+  "RUS_MOS_Moscow-Bibirevo.276120_TMYx.epw": {
+   "identity": true,
+   "cases": {
+    "fut2": {
+     "file": "RUS_MOS_Moscow-Bibirevo.276120_TMYx_+2C.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.04996619706234684,
+      "dpt": 0.04999894762125967,
+      "rh": 0,
+      "hir": 0.4999499850190432
+     },
+     "rhHeldMax": 0,
+     "monthly": [
+      {
+       "month": 1,
+       "applied": 1.268,
+       "atlas": 1.344,
+       "diff": -0.076
+      },
+      {
+       "month": 2,
+       "applied": 1.082,
+       "atlas": 1.026,
+       "diff": 0.056
+      },
+      {
+       "month": 3,
+       "applied": 1.121,
+       "atlas": 1.18,
+       "diff": -0.059
+      },
+      {
+       "month": 4,
+       "applied": 0.927,
+       "atlas": 0.876,
+       "diff": 0.051
+      },
+      {
+       "month": 5,
+       "applied": 0.976,
+       "atlas": 0.984,
+       "diff": -0.008
+      },
+      {
+       "month": 6,
+       "applied": 1.074,
+       "atlas": 1.032,
+       "diff": 0.042
+      },
+      {
+       "month": 7,
+       "applied": 1.359,
+       "atlas": 1.422,
+       "diff": -0.063
+      },
+      {
+       "month": 8,
+       "applied": 1.306,
+       "atlas": 1.31,
+       "diff": -0.004
+      },
+      {
+       "month": 9,
+       "applied": 1.159,
+       "atlas": 1.168,
+       "diff": -0.009
+      },
+      {
+       "month": 10,
+       "applied": 0.964,
+       "atlas": 0.952,
+       "diff": 0.012
+      },
+      {
+       "month": 11,
+       "applied": 0.876,
+       "atlas": 0.832,
+       "diff": 0.044
+      },
+      {
+       "month": 12,
+       "applied": 1.073,
+       "atlas": 1.068,
+       "diff": 0.005
+      }
+     ],
+     "monthlyMaxDiff": 0.076,
+     "annualChange": 1.1
+    },
+    "urban": {
+     "file": "RUS_MOS_Moscow-Bibirevo.276120_TMYx_urban.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.04998517036437988,
+      "dpt": 0,
+      "rh": 0.4999202798917963,
+      "hir": 0
+     },
+     "dptHeldMax": 0,
+     "uhi": {
+      "mean": 1.456,
+      "nightMean": 1.97,
+      "max": 6.327
+     }
+    },
+    "fut3_dense": {
+     "file": "RUS_MOS_Moscow-Bibirevo.276120_TMYx_+3C_dense.epw",
+     "errors": [],
+     "maxDiff": {
+      "dbt": 0.04998780351388632,
+      "dpt": 0.04999997110236354,
+      "rh": 0.4999160283771573,
+      "hir": 0.4999625379011263
+     },
+     "monthly": [
+      {
+       "month": 1,
+       "applied": 2.569,
+       "atlas": 2.644,
+       "diff": -0.075
+      },
+      {
+       "month": 2,
+       "applied": 2.294,
+       "atlas": 2.246,
+       "diff": 0.048
+      },
+      {
+       "month": 3,
+       "applied": 2.202,
+       "atlas": 2.25,
+       "diff": -0.048
+      },
+      {
+       "month": 4,
+       "applied": 1.927,
+       "atlas": 1.876,
+       "diff": 0.051
+      },
+      {
+       "month": 5,
+       "applied": 1.962,
+       "atlas": 1.914,
+       "diff": 0.048
+      },
+      {
+       "month": 6,
+       "applied": 2.349,
+       "atlas": 2.332,
+       "diff": 0.017
+      },
+      {
+       "month": 7,
+       "applied": 2.822,
+       "atlas": 2.892,
+       "diff": -0.07
+      },
+      {
+       "month": 8,
+       "applied": 2.861,
+       "atlas": 2.9,
+       "diff": -0.039
+      },
+      {
+       "month": 9,
+       "applied": 2.602,
+       "atlas": 2.598,
+       "diff": 0.004
+      },
+      {
+       "month": 10,
+       "applied": 2.319,
+       "atlas": 2.332,
+       "diff": -0.013
+      },
+      {
+       "month": 11,
+       "applied": 2.068,
+       "atlas": 1.962,
+       "diff": 0.106
+      },
+      {
+       "month": 12,
+       "applied": 2.418,
+       "atlas": 2.458,
+       "diff": -0.04
+      }
+     ],
+     "monthlyMaxDiff": 0.106,
+     "annualChange": 2.368,
+     "uhi": {
+      "mean": 1.82,
+      "nightMean": 2.463,
+      "max": 7.913
+     }
+    }
+   }
+  }
+ },
+ "pass": true
+}
