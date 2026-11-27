@@ -593,41 +593,12 @@
     s += `</svg>`;
     return { html: s + legendHtml([[sc.color(0.15 * max), "Few hours"], [sc.color(max), `Most hours in one cell (${max})`]]), csv: () => { const r = ["dry bulb from (C),humidity ratio from (g/kg),hours"]; for (const [k, c] of Object.entries(cnt)) r.push(k + "," + c); return r.join("\n"); } };
   }
-  function zoneOutlines(Z, P, keys) {
-    const out = [], p = 101325, tLo = -15, tHi = 45, wHi = 30, x0 = 48, y0 = 14, w = 640, h = 410;
-    const Xp = (t) => x0 + w * (Math.max(tLo, Math.min(tHi, t)) - tLo) / (tHi - tLo), Yp = (wg) => y0 + h - h * wg / wHi;
-    const wbAt = (t, wk) => C.wetBulb(t, wk, p);
-    const tForWb = (wb, wk) => { let lo = wb, hi = 60; for (let k = 0; k < 30; k++) { const m = (lo + hi) / 2; if (wbAt(m, wk) > wb) hi = m; else lo = m; } return (lo + hi) / 2; };
-    const tForRh = (rh, wk) => C.dewFromPw(C.pwFromW(wk, p) / (rh / 100)); // temperature where this humidity ratio has the given RH
-    const iv = { // interval of temperature, per humidity ratio (kg/kg)
-      comfort: (wk, cv) => (wk <= P.comfort.wMax ? [cv.lo, cv.hi] : null),
-      dehumid: (wk, cv) => (wk > P.comfort.wMax ? [cv.lo, cv.hi] : null),
-      humid: (wk, cv) => (wk < P.humid.wMin ? [cv.lo, cv.hi] : null),
-      internal: (wk, cv) => [P.internal.balance, cv.lo],
-      solarLow: (wk, cv) => [cv.lo - P.solarLow.dT, cv.lo], solarHigh: (wk, cv) => [cv.lo - P.solarHigh.dT, cv.lo],
-      fan: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, Math.min(cv.hi + P.fan.dT, tForRh(P.fan.rhMax, wk) > cv.hi ? cv.hi + P.fan.dT : cv.hi)] : null),
-      natVent: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, cv.hi + P.natVent.dT] : null),
-      mass: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, cv.hi + P.mass.dT] : null), massNight: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, cv.hi + P.massNight.dT] : null),
-      evap: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, Math.min(P.evap.tMax, tForWb(P.evap.wbMax, wk))] : null), evap2: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, Math.min(P.evap2.tMax, tForWb(P.evap2.wbMax, wk))] : null),
-      shade: () => [P.shade.tMin, 45], windProt: () => [-15, P.windProt.tMax]
-    };
-    const SHORT = { comfort: "Comfort", dehumid: "Dehumidify", humid: "Humidify", internal: "Internal gains", solarLow: "Solar, low mass", solarHigh: "Solar, high mass", fan: "Fan", natVent: "Natural vent.", mass: "Mass", massNight: "Mass + night vent.", evap: "Direct evap.", evap2: "Two-stage evap.", shade: "Shading", windProt: "Wind protection", heat: "", cool: "" };
-    const names = Object.fromEntries(C.CC_KEYS);
-    for (const k of keys) {
-      if (!iv[k]) continue; const left = [], right = [];
-      for (let wg = 0; wg <= wHi; wg += 0.25) { const wk = wg / 1000, cv = C.curveAt(Z.grid, wk), r = iv[k](wk, cv); if (!r) continue; let [a, b] = r; const td = C.dewFromPw(Math.max(1, C.pwFromW(wk, p))); a = Math.max(a, td); if (b <= a) continue; left.push([Xp(a), Yp(wg)]); right.push([Xp(b), Yp(wg)]); }
-      if (left.length < 2) continue;
-      const pts = left.concat(right.reverse()); const d = "M" + pts.map((q) => q[0].toFixed(1) + "," + q[1].toFixed(1)).join("L") + "Z";
-      const fam = S.CC_FAMILY[k], col = fam >= 0 ? S.FAMILIES[fam][2] : "#5b6663";
-      const mid = left[Math.floor(left.length * 0.25)]; out.push({ k, d, col, name: names[k], short: SHORT[k], lx: (mid[0] + right[right.length - 1 - Math.floor(left.length * 0.25)][0]) / 2 - 20, ly: mid[1] });
-    }
-    return out;
-  }
+  const zoneOutlines = S.zoneOutlines; // shared with Clima Compare (sections.js)
   function zonesCard() {
     const Z = ctx.X.zones, names = C.CC_KEYS, cover = C.strategyCover(Z, [...st.ccSel]);
     const rows = names.map(([k, l]) => { const fam = S.CC_FAMILY[k], col = fam >= 0 ? S.FAMILIES[fam][2] : "#5b6663"; const chk = k === "heat" || k === "cool" ? "" : `<input type="checkbox" data-zone="${k}" ${st.ccSel.has(k) ? "checked" : ""} aria-label="${esc(l)}">`; return `<tr><td>${chk}</td><td><span class="swatch" style="background:${col}"></span> ${esc(l)}</td><td class="r">${fmt(Z.hours[k])}</td><td class="r">${fmt(100 * Z.hours[k] / N, 1)} %</td></tr>`; }).join("");
     const html = `<table class="t"><tr><th></th><th>Zone</th><th class="r">Hours</th><th class="r">Share</th></tr>${rows}<tr><td></td><td><b>Covered by the ticked zones together</b></td><td class="r"><b>${fmt(cover.hours)}</b></td><td class="r"><b>${fmt(100 * cover.hours / N, 1)} %</b></td></tr></table><p class="note">Zones overlap, so their hours do not add up. Sun shading and wind protection describe conditions beside the comfort question and are counted separately.</p>` + criteriaHtml();
-    return { html, csv: () => ["zone,hours,share"].concat(names.map(([k, l]) => `${l},${Z.hours[k]},${(Z.hours[k] / N).toFixed(4)}`)).join("\n") };
+    return { html, csv: () => ["zone,hours,share"].concat(names.map(([k, l]) => `"${l}",${Z.hours[k]},${(Z.hours[k] / N).toFixed(4)}`)).join("\n") };
   }
   const CRIT = [["comfort.met", "Comfort: metabolic rate", "met"], ["comfort.cloS", "Comfort: clothing in summer", "clo"], ["comfort.cloW", "Comfort: clothing in winter", "clo"], ["comfort.wMax", "Comfort: upper humidity ratio", "kg/kg"], ["shade.tMin", "Sun shading above", "°C"], ["shade.ghiMin", "Sun shading with global radiation above", "W/m²"], ["mass.dT", "High mass: up to this far above comfort", "K"], ["massNight.dT", "Mass and night ventilation: up to this far above comfort", "K"], ["massNight.nightBelow", "Mass and night ventilation: night minimum at least this far below the comfort limit", "K"], ["evap.wbMax", "Direct evaporative: wet bulb up to", "°C"], ["evap2.wbMax", "Two-stage evaporative: wet bulb up to", "°C"], ["natVent.dT", "Natural ventilation: up to this far above comfort", "K"], ["fan.dT", "Fan-forced ventilation: up to this far above comfort", "K"], ["internal.balance", "Internal gains: balance point", "°C"], ["solarLow.irrMin", "Passive solar: irradiance on the equator-facing façade, mean of the last hours, at least", "W/m²"], ["solarLow.dT", "Passive solar, low mass: down to this far below comfort", "K"], ["solarHigh.dT", "Passive solar, high mass: down to this far below comfort", "K"], ["windProt.vMin", "Wind protection: wind above", "m/s"], ["windProt.tMax", "Wind protection: air below", "°C"]];
   function criteriaHtml() {

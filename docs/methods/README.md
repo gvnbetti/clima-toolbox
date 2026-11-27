@@ -33,12 +33,15 @@ mathematics runs underneath these apps, and we try to be as transparent about it
 the methods and validation pages. Some assumptions are self-evident; others are there for expert users to question and
 challenge. All the tools are free to use and free to inspect, in the hope that others will help us make them better.
 
-## The five apps
+## The six apps
 
 **Clima Map** finds the most appropriate weather file for a given location.
 
 **Clima Morph** writes the future and urban climate into the weather file itself, so that the same conditions can be
 carried into other simulation tools.
+
+**Clima Compare** sets two climates side by side: two places, two periods of one place, or a place today against a
+warmer future. It asks what carries over from the climate you know, and what does not.
 
 **Macro Clima** helps understand the climate: comfort, sun, wind, sky and rain, and the design strategies that respond
 to them. It explores present conditions, future warming and the influence of the city.
@@ -91,6 +94,7 @@ inspected.
 |---|---|
 | [Clima Map](clima-map.md) | weather station catalogue, place search, choice of file |
 | [Clima Morph](clima-morph.md) | writing the future and urban climate into a valid EPW file |
+| [Clima Compare](clima-compare.md) | two files side by side: differences, solar time, season shift, the written reading |
 | [Macro Clima](macro-clima.md) | sun, surfaces, psychrometrics, comfort, strategies, derived readings |
 | [Future and urban climate](climate-scenarios.md) | morphing to levels of global warming; urban heat island (shared by Macro, Micro, Room Clima and Clima Morph) |
 | [Micro Clima](micro-clima.md) | ground and wall heat balance, radiant exchange, trees and canopies, enclosures, UTCI |

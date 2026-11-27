@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Clima Compare · Clima Toolbox</title>
+<meta name="description" content="How Clima Toolbox works: background, principles, models, assumptions and limits.">
+<link rel="icon" href="../shared/icons/toolbox.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../shared/fonts/fonts.css">
+<style>
+:root { --bg: #f1f2ef; --panel: #fbfbf9; --ink: #18201f; --mute: #5b6663; --line: #d6dad5; --accent: #23614f;
+  --f-body: "IBM Plex Sans", system-ui, sans-serif; --f-data: "IBM Plex Mono", ui-monospace, monospace }
+
+* { box-sizing: border-box }
+.ref { padding-left: 2em; text-indent: -2em; font-size: 14px }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 var(--f-body) }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 48px max(20px, env(safe-area-inset-left, 0px)) 64px; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 48px }
+nav.toc { font-size: 14px; position: sticky; top: 16px; align-self: start }
+nav.toc b { display: block; font: 600 11px var(--f-data); text-transform: uppercase; letter-spacing: .08em; color: var(--mute); margin: 0 0 10px }
+nav.toc a { display: block; color: var(--mute); text-decoration: none; padding: 4px 0 4px 10px; border-left: 2px solid var(--line) }
+nav.toc a:hover { color: var(--ink) } nav.toc a[aria-current] { color: var(--ink); border-left-color: var(--accent); font-weight: 600 }
+article { max-width: 780px }
+h1 { font-size: 38px; font-weight: 300; letter-spacing: -.01em; line-height: 1.15; margin: 0 0 28px }
+h2 { font: 600 13px var(--f-data); text-transform: uppercase; letter-spacing: .08em; color: var(--mute); margin: 40px 0 12px }
+h3 { font-size: 17px; margin: 28px 0 8px }
+p { margin: 0 0 14px } a { color: var(--accent) } code { font: 13px var(--f-data); overflow-wrap: anywhere } pre { overflow-x: auto; font-size: 13px }
+ul, ol { margin: 0 0 14px; padding-left: 22px } li { margin: 0 0 6px } li > ul { margin: 6px 0 0 }
+table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.5; background: var(--panel); border: 1px solid var(--line); margin: 0 0 18px }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-top: 1px solid var(--line) }
+thead th { font: 600 11px var(--f-data); text-transform: uppercase; letter-spacing: .06em; color: var(--mute); border-top: 0 }
+.tw { overflow-x: auto }
+.next { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; display: flex; justify-content: space-between; gap: 16px }
+.next a { text-decoration: none }
+.src { font: 12px var(--f-data); color: var(--mute) } .src a { color: inherit }
+@media (max-width: 820px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 20px; padding-top: 32px } nav.toc { position: static }
+  nav.toc a { display: inline-block; border: 1px solid var(--line); border-radius: 14px; padding: 3px 10px; margin: 0 4px 6px 0 }
+  nav.toc a[aria-current] { border-color: var(--accent) } h1 { font-size: 30px } .tw table { min-width: 620px } td code { overflow-wrap: normal } }
+</style>
+</head>
+<body><!-- clima-studio-bar --><style>
+:root{color-scheme:light}
+.csb{--csb-bg:#fbfbf9;--csb-ink:#18201f;--csb-mute:#5b6663;--csb-line:#d6dad5;--csb-on:#e6e9e4;display:flex;align-items:center;gap:4px 18px;flex-wrap:wrap;
+ padding:6px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px));background:var(--csb-bg);color:var(--csb-ink);border-bottom:1px solid var(--csb-line);
+ font:500 13px/1.2 "IBM Plex Sans",system-ui,-apple-system,sans-serif;position:relative;z-index:50}
+
+.csb a{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:7px;border-radius:5px}
+.csb svg{flex:none;display:block}
+.tbver{font:500 12px var(--f-data,ui-monospace,monospace);color:#5b6663;margin-left:8px;vertical-align:middle;letter-spacing:0}
+.csb-ver{font:500 10.5px var(--f-data,ui-monospace,monospace);color:var(--csb-mute);margin-left:-10px}
+.csb-home{font-size:15px;padding:3px 4px}.csb-home b{font-weight:600}.csb-home span{font-weight:300}
+.csb-apps{display:flex;gap:2px;flex-wrap:wrap}
+.csb-apps a{padding:5px 9px;color:var(--csb-mute)}.csb-apps a:hover{color:var(--csb-ink);background:var(--csb-on)}
+.csb-apps a[aria-current]{color:var(--csb-ink);background:var(--csb-on);font-weight:600}
+.csb-right{margin-left:auto;display:flex;gap:2px 14px;flex-wrap:wrap}
+.csb-right a{color:var(--csb-mute);font-size:12px;padding:5px 2px}.csb-right a:hover,.csb-right a[aria-current]{color:var(--csb-ink)}.csb-right a[aria-current]{font-weight:600}
+@media (max-width:720px){.csb-apps a span,.csb .csb-src{display:none}.csb-apps a{padding:5px 7px}.csb-right{gap:10px}}
+</style><nav class="csb" aria-label="Clima Toolbox apps"><a class="csb-home" href="https://gvnbetti.github.io/clima-toolbox/"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><path d="M4 44H60M8 44A24 24 0 0 1 56 44M15 44A17 17 0 0 1 49 44M22 44A10 10 0 0 1 42 44" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="44" cy="23.22" r="5" fill="#d9762b"/></svg><b>Clima</b><span>Toolbox</span></a><span class="csb-ver" title="Clima Toolbox release">0.9.0 beta</span><span class="csb-apps"><a href="https://gvnbetti.github.io/clima-toolbox/map/index.html" title="Clima Map: Find a weather file"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M32 58C29 53 24 48 24 43A8 8 0 0 1 40 43C40 48 35 53 32 58Z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Clima Map</span></a><a href="https://gvnbetti.github.io/clima-toolbox/morph/index.html" title="Clima Morph: Export a future or urban weather file"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M6 56H58M32 50V40M25 46L32 39L39 46" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Clima Morph</span></a><a href="https://gvnbetti.github.io/clima-toolbox/compare/index.html" title="Clima Compare: Compare two weather files"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M12 56H52M24 56V45M40 56V39" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Clima Compare</span></a><a href="https://gvnbetti.github.io/clima-toolbox/macro/index.html" title="Macro Clima: Read the climate"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M4 34H60M14 43H50M24 52H40" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Macro Clima</span></a><a href="https://gvnbetti.github.io/clima-toolbox/micro/index.html" title="Micro Clima: Outdoor comfort"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M6 56H58M24 48V56M42 49V56" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="41" r="7" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="42" cy="45" r="3" fill="currentColor"/></svg><span>Micro Clima</span></a><a href="https://gvnbetti.github.io/clima-toolbox/room/build/index.html" title="Room Clima: Room and facade"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M50 43V38H14V56H50V51" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Room Clima</span></a></span><span class="csb-right"><a href="https://gvnbetti.github.io/clima-toolbox/methods.html" aria-current=page>Methods</a><a href="https://gvnbetti.github.io/clima-toolbox/validation.html">Validation</a><a class="csb-src" href="https://github.com/gvnbetti/clima-toolbox">Source</a><a href="https://gvnbetti.github.io/clima-toolbox/about.html">About</a><a href="https://gvnbetti.github.io/clima-toolbox/impressum.html">Impressum</a></span></nav><script>(function(){if(!/(^|\.)github\.io$/.test(location.hostname))return;var s=document.createElement("script");s.async=true;s.setAttribute("data-goatcounter","https://climatoolbox.goatcounter.com/count");s.src="https://gvnbetti.github.io/clima-toolbox/shared/goatcounter-count.js";document.head.appendChild(s)})();</script><!-- /clima-studio-bar -->
+<div class="wrap"><nav class="toc" aria-label="Method pages"><b>Methods</b><a href="../methods.html">Overview</a><a href="../methods/map.html">Clima Map</a><a href="../methods/morph.html">Clima Morph</a><a href="../methods/compare.html" aria-current=page>Clima Compare</a><a href="../methods/macro.html">Macro Clima</a><a href="../methods/climate.html">Future and urban climate</a><a href="../methods/micro.html">Micro Clima</a><a href="../methods/room.html">Room Clima</a><a href="../methods/room-carbon.html">Room Clima: carbon</a></nav>
+<article><h1>Clima Compare: method</h1>
+<h2>What it is for</h2>
+<p>Setting two climates side by side, so that design experience from one can be carried to the other, or its limits seen.</p>
+<p>Clima Compare reads two weather files: A, the climate the reader knows, and B, the climate being designed for. Three
+kinds of comparison use the same app: two places; two files of the same place (two periods of a station, or two
+sources for one city); and a climate analogue, a place today against another place, or itself, at a level of global
+warming. Clima Compare adds no climate model of its own. For each file it gives the figures Macro Clima gives for that
+file with the same settings; it only aligns the two files, subtracts and describes.</p>
+<h2>How it works</h2>
+<p><strong>Reading the files.</strong> Each file is read with Macro Clima's reader and processed by Macro Clima's own code
+(<a href="https://github.com/gvnbetti/clima-toolbox/blob/main/macro/core.js"><code>macro/core.js</code></a>, <code>processWeather</code>), and its summary figures come from the same function Macro Clima uses
+(<a href="https://github.com/gvnbetti/clima-toolbox/blob/main/macro/sections.js"><code>macro/sections.js</code></a>, <code>summarise</code>). Future climate and urban heat island are applied per file through the shared core
+(<a href="https://github.com/gvnbetti/clima-toolbox/blob/main/shared/climamods.js"><code>shared/climamods.js</code></a>, <code>prepWeather</code>), as described in <a href="../methods/climate.html">Future and urban climate</a>. Nothing is
+copied: Clima Compare loads Macro Clima's files. Sun position follows NOAA (n.d.) after Meeus (1998); irradiation on
+surfaces Perez et al. (1990); outdoor comfort the UTCI (Bröde et al., 2012); adaptive comfort EN 16798-1 (CEN, 2019),
+its German annex (DIN, 2021) or ASHRAE 55 (ASHRAE, 2020); strategy zones Givoni (1992) and Milne and Givoni (1979)
+with the Climate Consultant criteria (Milne, n.d.); driving rain ISO 15927-3 (ISO, 2009).</p>
+<p><strong>Differences.</strong> Every difference is B − A, in the unit of the figure; temperature differences are in kelvin, shares
+in percentage points. Two charts of the same variable share one scale. Hour-by-hour differences are drawn on a
+diverging scale that spans the 98th percentile of the absolute difference.</p>
+<p><strong>Solar time.</strong> Charts by hour of the day use local apparent solar time, so that noon is the sun's highest point in
+both files whatever their time zones. For each day, the offset from local standard time is the equation of time plus
+four minutes per degree of longitude from the time zone's meridian, from the shared sun position code. Each file hour
+is taken at its midpoint, as in Macro Clima; the value at the centre of each solar hour is interpolated linearly
+between the two neighbouring file hours (wind direction takes the nearest hour). Annual and monthly figures are
+computed on clock hours and do not change.</p>
+<p><strong>Season shift.</strong> An optional switch shows one file 182 days later. If the two files lie on opposite sides of the
+equator, the southern one moves, so that summer meets summer. If both lie on the same side, file B moves, so that each
+season of A meets the opposite season of B. The shift moves the hours on the calendar of the charts only: annual
+totals and counts stay as they are, and seasonal figures always use each file's own seasons. Month labels follow the
+calendar of the file that does not move.</p>
+<p><strong>The reading.</strong> The written reading at the top follows fixed rules, and every number in it links to the card it
+comes from. It answers four questions in order. How different are the two climates overall: Köppen-Geiger class,
+annual mean temperature, the 1st and 99th percentiles, solar radiation on the horizontal, hours with a dew point above
+18 °C. What is the main design problem of B against A: a climate is dominated by heating when heating degree days make
+up more than three quarters of heating and cooling degree days together, by cooling when they make up less than a
+quarter, and mixed otherwise; the façade with the most summer irradiation; the winter irradiation of the façade facing
+the equator. Which passive strategies carry over: for each strategy zone, B's hours against A's; a strategy keeps its
+weight between 70 % and 160 % of A's hours, covers far fewer hours below 70 %, and matters more above 160 % or when A
+has fewer than 500 hours and B at least 500; strategies under 500 hours in both files are left out. When in the year
+the two are closest and furthest apart: the months with the smallest and largest difference of mean temperature. When
+both files describe the same place (within 0.05° of latitude and longitude), the text speaks of file A and file B. The
+reading never says which climate is better.</p>
+<h2>Assumptions</h2>
+<p>One comfort model, one set of degree-day bases and one set of strategy-zone criteria apply to both files, so that hours
+compare. By default the comfort model follows file B: the German annex for German stations, EN 16798-1 category II
+elsewhere in Europe, ASHRAE 55 at 80 % acceptability in the rest of the world. The place name in the reading is the
+station's name without suffixes such as "Airport".</p>
+<h2>Limits</h2>
+<p>Differences between two files include differences between their data sets and their years, as well as between the
+climates; the app lists both and notes where they differ, but does not correct for them. Solar time uses each file
+hour's midpoint, which is the convention of the apps; files whose producers centre radiation differently within the
+hour (most TMYx files carry an extraterrestrial radiation centred half an hour earlier) keep that offset in the solar
+time charts. The season shift is a fixed 182 days, so a month moved by it is not exactly a calendar month of the other
+file.</p>
+<h2>Validation</h2>
+<p>For each file the figures equal Macro Clima's for the same settings; a file compared with itself gives zero in every
+difference; swapping A and B changes the sign of every difference and nothing else; the sun's height centres on 12:00
+solar time in every bundled file; and the season shift lines up a southern twin of Berlin with Berlin hour by hour:
+see <a href="https://github.com/gvnbetti/clima-toolbox/tree/main/validation/clima-compare">Clima Compare</a>.</p>
+<h2>References</h2>
+<!-- refs: noaa meeus1998 perez1990 brode2012 cen16798_1 dinNA ashrae55 givoni1992 milne1979 milneCC iso15927_3 -->
+
+<p class="ref">ASHRAE. (2020b). <em>ANSI/ASHRAE Standard 55-2020: Thermal environmental conditions for human occupancy</em>. American Society of Heating, Refrigerating and Air-Conditioning Engineers.</p>
+<p class="ref">Bröde, P., Fiala, D., Błażejczyk, K., Holmér, I., Jendritzky, G., Kampmann, B., Tinz, B., &amp; Havenith, G. (2012). Deriving the operational procedure for the Universal Thermal Climate Index (UTCI). <em>International Journal of Biometeorology, 56</em>(3), 481–494. <a href="https://doi.org/10.1007/s00484-011-0454-1">https://doi.org/10.1007/s00484-011-0454-1</a></p>
+<p class="ref">CEN. (2019). <em>EN 16798-1:2019 Energy performance of buildings: Ventilation for buildings: Part 1: Indoor environmental input parameters for design and assessment of energy performance of buildings addressing indoor air quality, thermal environment, lighting and acoustics (Module M1-6)</em>. European Committee for Standardization.</p>
+<p class="ref">DIN. (2021). <em>E DIN EN 16798-1/NA:2021-06 Nationaler Anhang: Nationale Ergänzungen und Hinweise zur Anwendung: Energetische Bewertung von Gebäuden: Lüftung von Gebäuden: Teil 1</em> [Draft standard, withdrawn]. Beuth.</p>
+<p class="ref">Givoni, B. (1992). Comfort, climate analysis and building design guidelines. <em>Energy and Buildings, 18</em>(1), 11–23. <a href="https://doi.org/10.1016/0378-7788(92)90047-K">https://doi.org/10.1016/0378-7788(92)90047-K</a></p>
+<p class="ref">ISO. (2009). <em>ISO 15927-3:2009 Hygrothermal performance of buildings: Calculation and presentation of climatic data: Part 3: Calculation of a driving rain index for vertical surfaces from hourly wind and rain data</em>. International Organization for Standardization.</p>
+<p class="ref">Meeus, J. (1998). <em>Astronomical algorithms</em> (2nd ed.). Willmann-Bell.</p>
+<p class="ref">Milne, M. (n.d.). <em>Climate Consultant</em> (Version 6) [Computer software]. UCLA Energy Design Tools Group. <a href="https://www.sbse.org/resources/climate-consultant">https://www.sbse.org/resources/climate-consultant</a></p>
+<p class="ref">Milne, M., &amp; Givoni, B. (1979). Architectural design based on climate. In D. Watson (Ed.), <em>Energy conservation through building design</em> (pp. 96–113). McGraw-Hill.</p>
+<p class="ref">NOAA Global Monitoring Laboratory. (n.d.). <em>NOAA solar calculator</em>. <a href="https://gml.noaa.gov/grad/solcalc/">https://gml.noaa.gov/grad/solcalc/</a></p>
+<p class="ref">Perez, R., Ineichen, P., Seals, R., Michalsky, J., &amp; Stewart, R. (1990). Modeling daylight availability and irradiance components from direct and global irradiance. <em>Solar Energy, 44</em>(5), 271–289. <a href="https://doi.org/10.1016/0038-092X(90)90055-H">https://doi.org/10.1016/0038-092X(90)90055-H</a></p>
+<p class="src">Source: <a href="https://github.com/gvnbetti/clima-toolbox/blob/main/docs/methods/clima-compare.md">docs/methods/clima-compare.md</a></p>
+<div class="next"><a href="../methods/morph.html">← Clima Morph</a><a href="../methods/macro.html">Macro Clima →</a></div></article></div>
+</body>
+</html>

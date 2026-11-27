@@ -1,6 +1,6 @@
 """Writes the landing page (index.html at the repository root) for Clima Toolbox.
-The five previews are drawn from real data in the repository: the station catalogue (Clima Map), Berlin morphed by Clima Morph
-itself, the Berlin weather file (Macro Clima), the Rome weather file (Micro Clima) and the sun angles of Mannheim (Room Clima) (morph/preview.json, written by node morph/mkpreview.js).
+The six previews are drawn from real data in the repository: the station catalogue (Clima Map), Berlin morphed by Clima Morph
+itself, the Berlin and Cairo weather files (Clima Compare), the Berlin weather file (Macro Clima), the Rome weather file (Micro Clima) and the sun angles of Mannheim (Room Clima) (morph/preview.json, written by node morph/mkpreview.js).
 Usage: python3 shared/mklanding.py   (from the repository root)"""
 import json, base64, gzip, math, pathlib, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -112,11 +112,32 @@ def prev_morph():
            f'<rect x="{x0 + 110}" y="{H - 15}" width="9" height="9" fill="{WARM}" opacity=".85"/><text x="{x0 + 124}" y="{H - 7}">+2 °C, urban: the file you download</text>')
     return f'<g class="t">{g}{leg}<text x="{W - 14}" y="13" text-anchor="end">Berlin · monthly mean air temperature · °C</text></g>'
 
+# ---------------------------------------------------------------- Clima Compare: Berlin and Cairo, monthly mean air temperature, with the difference
+def prev_compare():
+    MD = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    def mon(name):
+        t = [float(r[6]) for r in epw(name)]; out, i = [], 0
+        for d in MD: out.append(sum(t[i:i + d * 24]) / (d * 24)); i += d * 24
+        return out
+    a, b = mon('DEU_BE_Berlin-Tegel.AP.103820_TMYx.epw.txt'), mon('EGY_QH_Cairo.Intl.AP.623660_TMYx.epw.txt')
+    CA, CB = '#2a78d6', '#eb6834'
+    T0, T1 = -5, 35; x0, y0, cw = 40, 22, (W - 60) / 12; X = lambda m: x0 + (m + .5) * cw; Y = lambda v: y0 + (T1 - v) / (T1 - T0) * (H - 62)
+    g = ''.join(f'<line x1="{x0}" x2="{W - 14}" y1="{Y(v):.1f}" y2="{Y(v):.1f}" stroke="{LINE}" stroke-width="1"/><text x="{x0 - 6}" y="{Y(v) + 4:.1f}" text-anchor="end">{v}</text>' for v in (0, 10, 20, 30))
+    gap = 'M' + ' L'.join(f'{X(m):.1f} {Y(b[m]):.1f}' for m in range(12)) + ' L' + ' L'.join(f'{X(m):.1f} {Y(a[m]):.1f}' for m in reversed(range(12))) + 'Z'
+    la, lb = ('M' + ' L'.join(f'{X(m):.1f} {Y(v[m]):.1f}' for m in range(12)) for v in (a, b))
+    g += ''.join(f'<text x="{X(m):.1f}" y="{H - 24}" text-anchor="middle">{"JFMAMJJASOND"[m]}</text>' for m in range(12))
+    leg = (f'<rect x="{x0}" y="{H - 15}" width="9" height="9" fill="{CA}"/><text x="{x0 + 14}" y="{H - 7}">A Berlin</text>'
+           f'<rect x="{x0 + 90}" y="{H - 15}" width="9" height="9" fill="{CB}"/><text x="{x0 + 104}" y="{H - 7}">B Cairo</text>'
+           f'<rect x="{x0 + 176}" y="{H - 15}" width="9" height="9" fill="{CB}" opacity=".18"/><text x="{x0 + 190}" y="{H - 7}">B − A</text>')
+    return (f'<g class="t">{g}{leg}<text x="{W - 14}" y="13" text-anchor="end">Monthly mean air temperature · °C</text></g><path d="{gap}" fill="{CB}" opacity=".14"/>'
+            f'<path d="{la}" fill="none" stroke="{CA}" stroke-width="2"/><path d="{lb}" fill="none" stroke="{CB}" stroke-width="2"/>')
+
 svgwrap = lambda inner, label: f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="{label}" class="pv">{inner}</svg>'
 mp, nmap = prev_map()
 PREV = {'map': svgwrap(mp, 'Weather stations of the world, coloured by climate group'), 'macro': svgwrap(prev_macro(), 'Berlin daily temperature through the year'),
         'micro': svgwrap(prev_micro(), 'Rome air temperature by month and hour'), 'room': svgwrap(prev_room(), 'A room in section with summer and winter sun'),
-        'morph': svgwrap(prev_morph(), 'Berlin monthly temperature as recorded and morphed to +2 °C in an urban neighbourhood')}
+        'morph': svgwrap(prev_morph(), 'Berlin monthly temperature as recorded and morphed to +2 °C in an urban neighbourhood'),
+        'compare': svgwrap(prev_compare(), 'Monthly mean temperature of Berlin and Cairo, with the difference')}
 
 CARDS = [
     ('map', 'Clima', 'Map', 'map/index.html', 'Finds the weather file.',
@@ -125,6 +146,9 @@ CARDS = [
     ('morph', 'Clima', 'Morph', 'morph/index.html', 'Exports the weather file.',
      'The future climate and the urban heat island of the toolbox, written into the weather file itself. The download is a valid EPW file for EnergyPlus, Ladybug and other simulation tools, with the same hours as in Macro, Micro and Room Clima.',
      ['+1.5, +2 and +3 °C of global warming', 'Urban heat island', 'Read by EnergyPlus and Ladybug']),
+    ('compare', 'Clima', 'Compare', 'compare/index.html', 'Compares two weather files.',
+     'Two climates side by side, on the same scales: two places, two periods of one place, or a place today against a level of global warming. A written reading says what carries over from the climate you know, and what does not.',
+     ['Every chart for both files', 'Solar time and season shift', 'Which strategies carry over']),
     ('macro', 'Macro', 'Clima', 'macro/index.html', 'Reads the weather file.',
      'What the climate asks of a building: temperature and humidity through the year, sun, wind, sky, rain, comfort and the strategies that suit it, with the climate at +1.5, +2 and +3 °C of global warming and the urban heat island.',
      ['Comfort, sun, wind, rain', 'Future climate after IPCC AR6', 'Urban heat island']),
@@ -135,7 +159,7 @@ CARDS = [
      'What to build, facade by facade: window size, glazing, shading, ventilation, mass and fans searched against daylight, overheating, energy and whole-life carbon, with the DIN 4108-2 summer check.',
      ['Hourly ISO 52016-1 room model', 'Checked against EnergyPlus and Radiance', 'Packages that meet every target']),
 ]
-FLOW = [('map', 'Map'), ('morph', 'Morph'), ('macro', 'Macro'), ('micro', 'Micro'), ('room', 'Room')]
+FLOW = [('map', 'Map'), ('morph', 'Morph'), ('compare', 'Compare'), ('macro', 'Macro'), ('micro', 'Micro'), ('room', 'Room')]
 svg = lambda k, s: f'<svg width="{s}" height="{s}" viewBox="0 0 64 64" aria-hidden="true">{A.GLYPH[k].replace("4.5", "3")}</svg>'
 
 cards = ''.join(f'''
@@ -157,7 +181,7 @@ page = f'''<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Clima Toolbox: open climate tools for early design</title>
-<meta name="description" content="Five browser tools that carry one weather file from the map to the window and beyond: Clima Map, Clima Morph, Macro Clima, Micro Clima and Room Clima.">
+<meta name="description" content="Six browser tools that carry one weather file from the map to the window and beyond: Clima Map, Clima Morph, Clima Compare, Macro Clima, Micro Clima and Room Clima.">
 <link rel="icon" href="shared/icons/toolbox.svg" type="image/svg+xml">
 <link rel="stylesheet" href="shared/fonts/fonts.css">
 <style>
@@ -212,11 +236,11 @@ footer {{ padding: 22px 0 48px; font-size: 13px; color: var(--mute) }}
     <p class="sub">Bringing climate into architectural design.</p>
   </div>
   <div class="lede"><p>Clima Toolbox is a collection of free, open-source tools for exploring the relationship between climate, place and architecture.</p>
-  <p>Start by finding a weather file for your location. Understand the climate and explore future and urban climate scenarios. Analyse outdoor comfort and test different configurations. Then move indoors to explore how room dimensions, facade design and building configurations influence energy, thermal comfort and daylight. When the work moves on to other simulation tools, take the future and urban climate with you in the weather file itself.</p>
+  <p>Start by finding a weather file for your location. Understand the climate and explore future and urban climate scenarios, and set it beside a climate you know. Analyse outdoor comfort and test different configurations. Then move indoors to explore how room dimensions, facade design and building configurations influence energy, thermal comfort and daylight. When the work moves on to other simulation tools, take the future and urban climate with you in the weather file itself.</p>
   <p>All tools run directly in your browser.</p></div>
 </header>
 <main class="wrap">
-  <nav class="flow" aria-label="The five apps">{flow}</nav>
+  <nav class="flow" aria-label="The six apps">{flow}</nav>
   <div class="cards">{cards}</div>
   <section class="facts">
     <div><h3>Checked</h3><p>Every model is checked against an established tool: the room model against EnergyPlus and ASHRAE Standard 140, daylight against Radiance, outdoor comfort against Ladybug, and the climate calculations against pvlib, pythermalcomfort and the IPCC Atlas data. See the <a href="validation.html">validation page</a> for the results and their limits.</p></div>

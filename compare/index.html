@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Clima Compare</title>
+<meta name="description" content="Compare two weather files: two places, two periods of one place, or a place today against a warming level. What carries over from the climate you know, and what does not.">
+<link rel="icon" href="../shared/icons/compare.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../shared/fonts/fonts.css">
+<style>
+/* The instrument shared with Macro, Micro and Room Clima: settings column at left, the reading at right.
+   Ground limestone grey, ink blue-black, fir-green accent. Temperatures run blue to brick through a grey midpoint. */
+:root {
+  --bg: #f1f2ef; --panel: #fbfbf9; --ink: #18201f; --mute: #5b6663; --line: #d6dad5; --soft: #e6e9e4;
+  --accent: #23614f; --accent-soft: #d5e6df; --warm: #b2452c; --warm-soft: #f3dcd4; --cool: #3f6f9a; --out: #8b9592; --grey: #d3d7d2;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #6250d6;
+  --f-disp: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif; --f-body: "IBM Plex Sans", system-ui, sans-serif; --f-data: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+html { scroll-padding-top: calc(var(--navh, 56px) + 10px) }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--f-body); }
+.wrap { max-width: 1400px; margin: 0 auto; padding-block: 20px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-bottom: 14px }
+h1 { font: 600 26px/1.1 var(--f-disp); letter-spacing: .01em; margin: 0 }
+.tag { color: var(--mute); font-size: 13px }
+.draft { font: 500 11px/1 var(--f-data); text-transform: uppercase; letter-spacing: .08em; color: var(--warm); border: 1px solid currentColor; padding: 4px 6px; border-radius: 3px }
+.grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr) } }
+aside { position: sticky; top: var(--navh, 56px); max-height: calc(100vh - var(--navh, 56px) - 12px); overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px }
+@media (max-width: 900px) { aside { position: static; max-height: none; overflow: visible } }
+.grp { display: flex; flex-direction: column; gap: 6px }
+.grp + .grp { border-top: 1px solid var(--soft); padding-top: 12px }
+.lab { font: 500 11px/1.2 var(--f-data); text-transform: uppercase; letter-spacing: .08em; color: var(--mute) }
+.hint { color: var(--mute); font-size: 12px; line-height: 1.4 }
+select, input[type=number], input[type=text], .btn { font: 14px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px }
+select { width: 100% }
+.btn { cursor: pointer; text-align: center }
+.btn:hover { border-color: var(--accent) }
+.btn.primary { background: var(--accent); color: var(--panel); border-color: var(--accent); font-weight: 600 }
+.btn.small { font-size: 12px; padding: 3px 7px }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 4px; overflow: hidden }
+.seg button { font: 13px var(--f-body); color: var(--ink); border: 0; background: transparent; padding: 6px 4px; cursor: pointer }
+.seg button + button { border-left: 1px solid var(--line) }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); font-weight: 600 }
+.row { display: flex; gap: 6px; align-items: center }
+.row > * { flex: 1 }
+.row label { flex: 0 0 auto; font-size: 12px; color: var(--mute) }
+.drop { border: 1px dashed var(--line); border-radius: 4px; padding: 8px; font-size: 12.5px; color: var(--mute); text-align: center }
+.drop label { color: var(--accent); cursor: pointer; text-decoration: underline }
+.small { font-size: 12px; color: var(--mute); line-height: 1.4 }
+.drop.over { border-color: var(--accent); color: var(--accent) }
+.err { color: var(--warm); font-size: 12px }
+/* main */
+main { min-width: 0 }
+/* section navigation: always visible, the current group filled */
+nav.toc { position: sticky; top: 0; z-index: 30; background: var(--bg); display: flex; gap: 6px; padding: 8px 0 10px; margin: 0 0 10px 320px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch }
+nav.toc:empty { display: none }
+nav.toc::-webkit-scrollbar { display: none }
+nav.toc a { flex: none; font: 500 14px/1.2 var(--f-body); color: var(--ink); text-decoration: none; padding: 8px 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); white-space: nowrap }
+nav.toc a:hover { border-color: var(--accent) }
+nav.toc a.on { background: var(--accent); border-color: var(--accent); color: var(--panel); font-weight: 600 }
+@media (max-width: 900px) { nav.toc { margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 12px; padding: 8px max(16px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line) } nav.toc a { padding: 8px 12px } }
+/* settings: folds and "?" notes */
+details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: 8px }
+details.fold > summary::-webkit-details-marker { display: none }
+details.fold > summary::before { content: "▸"; font-size: 11px; color: var(--mute) }
+details.fold[open] > summary::before { content: "▾" }
+details.fold > summary .fsum { font: 12px var(--f-body); color: var(--mute); text-transform: none; letter-spacing: 0 }
+details.fold[open] > summary { margin-bottom: 6px }
+details.fold > :not(summary) + :not(summary) { margin-top: 6px }
+.lab .info { margin-left: 6px; vertical-align: 1px }
+/* key figures: cards on a phone */
+@media (max-width: 700px) {
+  table.glance, table.glance tbody, table.glance tr, table.glance td { display: block; width: auto !important; min-width: 0 !important }
+  table.glance tr:first-child { display: none }
+  table.glance tr { padding: 10px 0; border-bottom: 1px solid var(--soft) }
+  table.glance td { border: 0; padding: 2px 0 }
+  table.glance td:nth-child(1), table.glance td:nth-child(2) { display: inline-block }
+  table.glance td:nth-child(2) { float: right; text-align: right }
+  table.glance td:nth-child(3) { clear: both; padding-top: 4px }
+}
+section.part { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px 20px 20px; margin-bottom: 18px }
+section.part > h2 { font: 600 20px/1.2 var(--f-disp); margin: 0 0 4px }
+.reading { max-width: 860px; margin: 8px 0 14px; font-size: 15px; line-height: 1.6 }
+.reading p { margin: 0 0 6px }
+.reading .n { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--accent); cursor: pointer; border-bottom: 1px dotted currentColor }
+.reading .n:hover { background: var(--accent-soft) }
+.note { font-size: 12px; color: var(--mute); margin: 4px 0 10px }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 14px }
+.card { border: 1px solid var(--soft); border-radius: 5px; padding: 10px 12px 12px; min-width: 0; background: var(--panel); transition: box-shadow .3s }
+.card.wide { grid-column: 1 / -1 }
+.card.flash { box-shadow: 0 0 0 3px var(--accent) }
+.card h3 { font: 600 14px/1.3 var(--f-body); margin: 0 }
+.card .ch { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; margin-bottom: 6px }
+.card .ch .t { flex: 1; min-width: 180px }
+.card .ch .sub { font-size: 12px; color: var(--mute) }
+.card .tools { display: flex; gap: 4px; flex-wrap: wrap; align-items: center }
+.card .tools select { width: auto; font-size: 12px; padding: 3px 6px }
+.card .body { min-height: 60px; position: relative }
+.card svg { display: block; width: 100%; height: auto; overflow: visible }
+.card .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--mute); margin-top: 6px }
+.card .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px }
+.info { font: 600 11px var(--f-data); width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--mute); cursor: pointer; padding: 0 }
+.expl { font-size: 12.5px; color: var(--mute); background: var(--bg); border-radius: 4px; padding: 8px 10px; margin: 0 0 8px }
+svg text { font-family: var(--f-body); fill: var(--mute); font-size: 11px }
+svg .ax line, svg .ax path { stroke: var(--line) }
+svg .gl { stroke: var(--soft) }
+svg .ink { fill: var(--ink) }
+svg .lbl { fill: var(--ink); font-size: 11px }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 8px 0 14px }
+.tile { background: var(--bg); border-radius: 5px; padding: 8px 10px; cursor: default }
+.tile .v { font: 600 22px/1.15 var(--f-disp) }
+.tile .v small { font: 500 12px var(--f-body); color: var(--mute) }
+.tile .k { font-size: 12px; color: var(--mute) }
+table.t { border-collapse: collapse; width: 100%; font-size: 13px }
+table.t th, table.t td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--soft); vertical-align: top }
+table.t th { font: 500 11px var(--f-data); text-transform: uppercase; letter-spacing: .06em; color: var(--mute) }
+table.t td.r, table.t th.r { text-align: right; font-family: var(--f-data) }
+#rangepop { position: fixed; z-index: 60; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px; box-shadow: 0 4px 18px rgba(0,0,0,.18); display: flex; flex-direction: column; gap: 6px; font-size: 12px; width: 220px }
+#rangepop input { width: 80px }
+#tip { position: fixed; z-index: 50; pointer-events: none; background: var(--ink); color: var(--panel); font-size: 12px; line-height: 1.35; padding: 6px 8px; border-radius: 4px; max-width: 280px; display: none }
+#tip b { font-weight: 600 }
+/* dialogs */
+.modal { position: fixed; inset: 0; z-index: 40; background: rgba(10, 14, 13, .45); display: flex; align-items: center; justify-content: center; padding: 16px }
+.modal .box { background: var(--panel); border-radius: 8px; width: min(1180px, 100%); max-height: calc(100vh - 32px); overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px }
+.modal .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap }
+.modal .bar h2 { font: 600 18px var(--f-disp); margin: 0; flex: 1 }
+.results { max-height: 180px; overflow: auto; border: 1px solid var(--soft); border-radius: 4px }
+.results div { padding: 4px 8px; cursor: pointer; font-size: 13px }
+.results div:hover { background: var(--accent-soft) }
+.insp { border-left: 3px solid var(--s6); background: var(--bg); padding: 8px 12px; border-radius: 0 4px 4px 0; margin: 6px 0 10px; font-size: 13px }
+.insp h4 { margin: 0 0 4px; font: 600 12px var(--f-data); text-transform: uppercase; letter-spacing: .06em; color: var(--s6) }
+.insp ul { margin: 4px 0 0; padding-left: 18px }
+#hdd, #cdd { width: 84px; flex: none }
+.futband { border-left-color: #6b0f00 !important }
+.uhiband { margin: -4px 0 10px; padding: 6px 10px; border-left: 3px solid var(--warm); background: var(--warm-soft, #f3dcd4); font-size: 13px; color: var(--ink) }
+.warmtxt { color: var(--warm) }
+#uhinote span, #futnote span { display: block; margin-top: 4px }
+#uhiSeg button, #futSeg button { font-size: 12px; padding-left: 4px; padding-right: 4px }
+#scrim { position: fixed; inset: 0; background: rgba(10, 14, 13, .28); z-index: 40 }
+#guide { position: fixed; top: 0; right: 0; bottom: 0; width: min(680px, 94vw); background: var(--panel); border-left: 1px solid var(--line); z-index: 41; transform: translateX(102%); transition: transform .2s ease; display: flex; flex-direction: column; box-shadow: -8px 0 24px rgba(0,0,0,.08) }
+#guide.open { transform: none }
+#guide .ghead { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--line) }
+#guide .ghead h2 { font: 600 22px var(--f-disp); margin: 0 }
+#guide .gbody { overflow-y: auto; padding: 8px 20px 40px; position: relative }
+#guide .gtoc { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 8px 0 14px; border-bottom: 1px solid var(--soft); font-size: 13px }
+#guide .gtoc a { color: var(--accent); text-decoration: none }
+#guide .gch { font: 600 18px var(--f-disp); margin: 22px 0 6px; padding-top: 6px; border-top: 1px solid var(--line) }
+#guide h4 { font: 600 15px var(--f-disp); margin: 14px 0 2px }
+#guide .gsub { color: var(--mute); font-size: 13px }
+#guide .gcard { padding: 4px 8px; margin: 0 -8px; border-radius: 4px; transition: background .4s }
+#guide .gcard.flash, #guide section.flash { background: var(--accent-soft, #d5e6df) }
+#guide .glab { font: 500 11px var(--f-data); text-transform: uppercase; letter-spacing: .06em; color: var(--mute); margin-right: 4px }
+#guide p, #guide li, #guide dd { line-height: 1.55 }
+#guide dt { font-weight: 600; margin-top: 8px } #guide dd { margin: 0 0 0 0 }
+#guide .link, .link { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; font-size: 13px }
+.guide h3 { font: 600 16px var(--f-disp); margin: 18px 0 4px }
+.guide p, .guide li { max-width: 860px }
+.chk { display: flex; gap: 6px; align-items: flex-start; font-size: 13px }
+.chk input { margin-top: 3px }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px }
+.loading { color: var(--mute); padding: 40px; text-align: center }
+@media print { aside, nav.toc, .tools, .info { display: none !important } .grid { grid-template-columns: 1fr } section.part { break-inside: avoid-page } }
+
+/* Clima Compare: two files, A and B, one colour each across every chart, table and legend */
+:root { --ca: #2a78d6; --cb: #eb6834 }
+.ka, .kb { display: inline-block; font: 600 11px/1 var(--f-data); color: #fff; border-radius: 3px; padding: 3px 5px; vertical-align: 1px }
+.ka { background: var(--ca) } .kb { background: var(--cb) }
+.side { border-left: 3px solid var(--ca); padding-left: 10px; margin-left: -4px }
+.side.b { border-left-color: var(--cb) }
+.side .fname { font-size: 12.5px; color: var(--ink); word-break: break-word }
+.side .seg button { font-size: 12px; padding-left: 3px; padding-right: 3px }
+.side .note2 span { display: block; margin-top: 4px }
+#swapBtn { align-self: flex-start }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px }
+@media (max-width: 760px) { .pair { grid-template-columns: 1fr } }
+.pair h4, .stack h4 { font: 600 13px var(--f-body); margin: 4px 0 2px; display: flex; gap: 6px; align-items: center }
+.stack > div + div { margin-top: 10px }
+table.t td.d { color: var(--ink); font-weight: 600 }
+table.t th.ca { color: var(--ca) } table.t th.cb { color: var(--cb) }
+table.cmp td:first-child { min-width: 220px }
+.empty { color: var(--mute); font-size: 15px; padding: 40px 10px; text-align: center; max-width: 640px; margin: 0 auto }
+.shiftband { margin: -4px 0 10px; padding: 6px 10px; border-left: 3px solid var(--cool); background: #dfe8f0; font-size: 13px; color: var(--ink) }
+.notesA, .notesB { font-size: 12px; color: var(--mute) }
+</style>
+</head>
+<body><!-- clima-studio-bar --><style>
+:root{color-scheme:light}
+.csb{--csb-bg:#fbfbf9;--csb-ink:#18201f;--csb-mute:#5b6663;--csb-line:#d6dad5;--csb-on:#e6e9e4;display:flex;align-items:center;gap:4px 18px;flex-wrap:wrap;
+ padding:6px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px));background:var(--csb-bg);color:var(--csb-ink);border-bottom:1px solid var(--csb-line);
+ font:500 13px/1.2 "IBM Plex Sans",system-ui,-apple-system,sans-serif;position:relative;z-index:50}
+
+.csb a{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:7px;border-radius:5px}
+.csb svg{flex:none;display:block}
+.tbver{font:500 12px var(--f-data,ui-monospace,monospace);color:#5b6663;margin-left:8px;vertical-align:middle;letter-spacing:0}
+.csb-ver{font:500 10.5px var(--f-data,ui-monospace,monospace);color:var(--csb-mute);margin-left:-10px}
+.csb-home{font-size:15px;padding:3px 4px}.csb-home b{font-weight:600}.csb-home span{font-weight:300}
+.csb-apps{display:flex;gap:2px;flex-wrap:wrap}
+.csb-apps a{padding:5px 9px;color:var(--csb-mute)}.csb-apps a:hover{color:var(--csb-ink);background:var(--csb-on)}
+.csb-apps a[aria-current]{color:var(--csb-ink);background:var(--csb-on);font-weight:600}
+.csb-right{margin-left:auto;display:flex;gap:2px 14px;flex-wrap:wrap}
+.csb-right a{color:var(--csb-mute);font-size:12px;padding:5px 2px}.csb-right a:hover,.csb-right a[aria-current]{color:var(--csb-ink)}.csb-right a[aria-current]{font-weight:600}
+@media (max-width:720px){.csb-apps a span,.csb .csb-src{display:none}.csb-apps a{padding:5px 7px}.csb-right{gap:10px}}
+</style><nav class="csb" aria-label="Clima Toolbox apps"><a class="csb-home" href="https://gvnbetti.github.io/clima-toolbox/"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><path d="M4 44H60M8 44A24 24 0 0 1 56 44M15 44A17 17 0 0 1 49 44M22 44A10 10 0 0 1 42 44" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="44" cy="23.22" r="5" fill="#d9762b"/></svg><b>Clima</b><span>Toolbox</span></a><span class="csb-ver" title="Clima Toolbox release">0.9.0 beta</span><span class="csb-apps"><a href="https://gvnbetti.github.io/clima-toolbox/map/index.html" title="Clima Map: Find a weather file"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M32 58C29 53 24 48 24 43A8 8 0 0 1 40 43C40 48 35 53 32 58Z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Clima Map</span></a><a href="https://gvnbetti.github.io/clima-toolbox/morph/index.html" title="Clima Morph: Export a future or urban weather file"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M6 56H58M32 50V40M25 46L32 39L39 46" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Clima Morph</span></a><a href="https://gvnbetti.github.io/clima-toolbox/compare/index.html" title="Clima Compare: Compare two weather files" aria-current=page><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M12 56H52M24 56V45M40 56V39" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Clima Compare</span></a><a href="https://gvnbetti.github.io/clima-toolbox/macro/index.html" title="Macro Clima: Read the climate"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M4 34H60M14 43H50M24 52H40" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Macro Clima</span></a><a href="https://gvnbetti.github.io/clima-toolbox/micro/index.html" title="Micro Clima: Outdoor comfort"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M6 56H58M24 48V56M42 49V56" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="41" r="7" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="42" cy="45" r="3" fill="currentColor"/></svg><span>Micro Clima</span></a><a href="https://gvnbetti.github.io/clima-toolbox/room/build/index.html" title="Room Clima: Room and facade"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><circle cx="43" cy="14.95" r="5" fill="#d9762b"/><path d="M50 43V38H14V56H50V51" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Room Clima</span></a></span><span class="csb-right"><a href="https://gvnbetti.github.io/clima-toolbox/methods.html">Methods</a><a href="https://gvnbetti.github.io/clima-toolbox/validation.html">Validation</a><a class="csb-src" href="https://github.com/gvnbetti/clima-toolbox">Source</a><a href="https://gvnbetti.github.io/clima-toolbox/about.html">About</a><a href="https://gvnbetti.github.io/clima-toolbox/impressum.html">Impressum</a></span></nav><script>(function(){if(!/(^|\.)github\.io$/.test(location.hostname))return;var s=document.createElement("script");s.async=true;s.setAttribute("data-goatcounter","https://climatoolbox.goatcounter.com/count");s.src="https://gvnbetti.github.io/clima-toolbox/shared/goatcounter-count.js";document.head.appendChild(s)})();</script><!-- /clima-studio-bar -->
+<div class="wrap">
+  <header class="top">
+    <h1>Clima Compare <span class="tbver">0.9.0 beta</span></h1>
+    <span class="tag" id="sitetag">Two weather files, side by side</span>
+    <button class="btn" id="guideBtn" style="margin-left:auto">Guide</button>
+    <a class="draft" style="color:var(--accent);text-decoration:none" href="https://gvnbetti.github.io/clima-toolbox/validation.html" target="_blank" rel="noopener" title="How the models are checked">Beta · validation</a>
+  </header>
+  <nav class="toc" id="toc" aria-label="Sections"></nav>
+  <div class="grid">
+    <aside id="aside">
+      <div class="grp side a" data-side="A">
+        <span class="lab"><span class="ka">A</span> Reference: the climate you know<button class="info" data-gl="files" aria-label="About the two files">?</button></span>
+        <div class="drop" data-drop="A">Drop an EPW or ZIP file here or <label for="fileA">choose one</label><input id="fileA" data-file="A" type="file" accept=".epw,.zip,application/zip,application/octet-stream,text/plain" hidden></div>
+        <select data-sample="A" aria-label="Sample weather file for A"><option value="">Or pick a sample file</option></select>
+        <span class="small fname" id="infoA"></span><span class="err" id="errA" hidden></span>
+        <span class="lab" style="margin-top:4px">Future climate<button class="info" data-gl="modifiers" aria-label="About future climate and urban context">?</button></span>
+        <div class="seg" data-fut="A"><button data-v="0" aria-pressed="true">Present</button><button data-v="1.5" aria-pressed="false" title="around 2030">+1.5 °C</button><button data-v="2" aria-pressed="false" title="around 2050">+2 °C</button><button data-v="3" aria-pressed="false" title="around 2080 to 2100">+3 °C</button></div>
+        <span class="lab">Urban context</span>
+        <div class="seg" data-uhi="A"><button data-v="off" aria-pressed="true">As recorded</button><button data-v="suburban" aria-pressed="false">Suburban</button><button data-v="urban" aria-pressed="false">Urban</button><button data-v="dense" aria-pressed="false">Dense</button></div>
+        <div data-uhibox="A" hidden>
+          <div class="row"><label for="svfA" style="flex:1">Sky view factor, area average</label><input id="svfA" data-svf="A" type="range" min="0.2" max="1" step="0.05" style="width:100px"><output id="svfoA"></output></div>
+          <div class="row"><label for="fvegA" style="flex:1">Vegetation fraction</label><input id="fvegA" data-fveg="A" type="range" min="0" max="0.8" step="0.05" style="width:100px"><output id="fvegoA"></output></div>
+        </div>
+        <div class="hint note2" id="modA"></div>
+      </div>
+      <div class="grp side b" data-side="B">
+        <span class="lab"><span class="kb">B</span> The climate you design for<button class="info" data-gl="files" aria-label="About the two files">?</button></span>
+        <div class="drop" data-drop="B">Drop an EPW or ZIP file here or <label for="fileB">choose one</label><input id="fileB" data-file="B" type="file" accept=".epw,.zip,application/zip,application/octet-stream,text/plain" hidden></div>
+        <select data-sample="B" aria-label="Sample weather file for B"><option value="">Or pick a sample file</option></select>
+        <span class="small fname" id="infoB"></span><span class="err" id="errB" hidden></span>
+        <span class="lab" style="margin-top:4px">Future climate<button class="info" data-gl="modifiers" aria-label="About future climate and urban context">?</button></span>
+        <div class="seg" data-fut="B"><button data-v="0" aria-pressed="true">Present</button><button data-v="1.5" aria-pressed="false" title="around 2030">+1.5 °C</button><button data-v="2" aria-pressed="false" title="around 2050">+2 °C</button><button data-v="3" aria-pressed="false" title="around 2080 to 2100">+3 °C</button></div>
+        <span class="lab">Urban context</span>
+        <div class="seg" data-uhi="B"><button data-v="off" aria-pressed="true">As recorded</button><button data-v="suburban" aria-pressed="false">Suburban</button><button data-v="urban" aria-pressed="false">Urban</button><button data-v="dense" aria-pressed="false">Dense</button></div>
+        <div data-uhibox="B" hidden>
+          <div class="row"><label for="svfB" style="flex:1">Sky view factor, area average</label><input id="svfB" data-svf="B" type="range" min="0.2" max="1" step="0.05" style="width:100px"><output id="svfoB"></output></div>
+          <div class="row"><label for="fvegB" style="flex:1">Vegetation fraction</label><input id="fvegB" data-fveg="B" type="range" min="0" max="0.8" step="0.05" style="width:100px"><output id="fvegoB"></output></div>
+        </div>
+        <div class="hint note2" id="modB"></div>
+      </div>
+      <div class="grp">
+        <button class="btn small" id="swapBtn" title="Exchange A and B, with their settings">Swap A and B</button>
+      </div>
+      <div class="grp">
+        <span class="lab">Seasons<button class="info" data-gl="season" aria-label="About the season shift">?</button></span>
+        <label class="chk"><input type="checkbox" id="season"> Shift by half a year, to align the seasons</label>
+        <div class="hint" id="seasonnote">Off: both files on their own calendar.</div>
+      </div>
+      <details class="grp fold">
+        <summary class="lab">Comfort model <span class="fsum" id="admsum"></span></summary>
+        <select id="adm" aria-label="Adaptive comfort model"></select>
+        <div class="hint">One model for both files, so the hours compare. By default it follows file B: the German annex for German stations, EN 16798-1 category II elsewhere in Europe, ASHRAE 55 at 80 % acceptability in the rest of the world.</div>
+      </details>
+      <details class="grp fold">
+        <summary class="lab">Degree days</summary>
+        <div class="row"><label for="hdd">Heating base</label><input type="number" id="hdd" value="15" step="0.5"><label>°C</label></div>
+        <div class="row"><label for="cdd">Cooling base</label><input type="number" id="cdd" value="18" step="0.5"><label>°C</label></div>
+      </details>
+      <div class="grp">
+        <button class="btn" id="linkBtn" title="A link with these settings; the weather files are not part of it">Copy a link to these settings</button>
+        <span class="hint">Both files are read in your browser and never leave your computer. No file yet? Find one on <a href="../map/index.html" target="_blank" rel="noopener">Clima Map</a>.</span>
+      </div>
+    </aside>
+    <main id="main"><div class="empty">Load two weather files on the left: A, the climate you know, and B, the climate you design for. They can be two places, two files of the same place, or one file and the same file at a warming level.</div></main>
+  </div>
+</div>
+<div id="tip"></div>
+<div id="scrim" hidden></div>
+<aside id="guide" aria-label="Guide" aria-hidden="true"></aside>
+<div id="rangepop" hidden><div class="lab" id="rpTitle">Colour range</div><div class="row"><label for="rpLo">Min</label><input type="number" step="any" id="rpLo"><label for="rpHi">Max</label><input type="number" step="any" id="rpHi"></div><div class="row"><button class="btn small primary" id="rpApply">Apply</button><button class="btn small" id="rpReset">Automatic</button><button class="btn small" id="rpClose">Close</button></div></div>
+<script src="../macro/vendor/fflate-0.8.2/index.js?v=202611271800"></script>
+<script src="../macro/core.js?v=202611271800"></script>
+<script src="../macro/kit.js?v=202611271800"></script>
+<script src="../macro/sections.js?v=202611271800"></script>
+<script src="../macro/future.js?v=202611271800"></script>
+<script src="../macro/regions.js?v=202611271800"></script>
+<script src="../shared/climamods.js?v=202611271800"></script>
+<script src="guide.js?v=202611271800"></script>
+<script src="app.js?v=202611271800"></script>
+</body>
+</html>
