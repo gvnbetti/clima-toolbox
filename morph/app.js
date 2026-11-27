@@ -3,7 +3,7 @@
   "use strict";
   const $ = (id) => document.getElementById(id);
   const esc = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  const C = window.Clima, Mods = window.ClimaMods, X = window.ClimaMorph;
+  const C = window.Clima, Mods = window.ClimaMods, X = window.ClimaMorph, K = window.K;
   const VERSION = (document.querySelector(".tbver") || {}).textContent || "";
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const MDAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -110,7 +110,6 @@
     main.innerHTML = `<section class="part"><h2>What changes</h2><div class="reading">${what.map((x) => `<p>${x}</p>`).join("")}</div>
       <div class="tiles">${tiles.map(([v, u, k]) => `<div class="tile"><div class="v">${v} <small>${u}</small></div><div class="k">${k}</div></div>`).join("")}</div></section>`
       + fileSection() + tableSection() + carpetSection();
-    hookCarpets();
   }
   function fileSection() {
     if (!R.changed) return "";
@@ -133,45 +132,94 @@
       `<td>${f1(a.dbt[0][i])}</td><td>${f1(a.dbt[1][i])}</td><td class="d">${sg(a.dbt[1][i] - a.dbt[0][i])}</td>` +
       `<td>${f1(a.dpt[0][i])}</td><td>${f1(a.dpt[1][i])}</td><td>${f1(a.rh[0][i], 0)}</td><td>${f1(a.rh[1][i], 0)}</td>` +
       `<td>${f1(a.hir[0][i], 0)}</td><td>${f1(a.hir[1][i], 0)}</td></tr>`).join("");
-    return `<section class="part"><h2>Month by month<button class="info" data-g="table" aria-label="About the table">?</button></h2>
+    return `<section class="part" data-sec="table"><div class="ph"><h2>Month by month<button class="info" data-g="table" aria-label="About the table">?</button></h2>${tools("table")}</div>
       <div class="tscroll"><table class="t"><thead><tr><th>Month</th><th>Air, source °C</th><th>Air, morphed °C</th><th>Change K</th><th>Dew point, source °C</th><th>Dew point, morphed °C</th><th>RH, source %</th><th>RH, morphed %</th><th>Sky infrared, source W/m²</th><th>Sky infrared, morphed W/m²</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
   }
-  // white to brick, 0 to vmax K
-  const ramp = (v, vmax) => { const f = Math.max(0, Math.min(1, v / vmax)); const a = [246, 246, 243], b = [178, 69, 44]; return `rgb(${a.map((x, j) => Math.round(x + (b[j] - x) * f)).join(",")})`; };
-  function carpet(id, arr, title, vmax) {
-    const cw = 1.6, ch = 7, x0 = 34, y0 = 4, Wd = x0 + 365 * cw + 4, Hd = y0 + 24 * ch + 16;
-    let s = `<svg viewBox="0 0 ${Wd} ${Hd}" role="img" aria-label="${esc(title)}" data-car="${id}">`;
-    for (let d = 0; d < 365; d++) for (let h = 0; h < 24; h++) s += `<rect x="${(x0 + d * cw).toFixed(1)}" y="${y0 + h * ch}" width="${cw + 0.15}" height="${ch + 0.15}" fill="${ramp(arr[d * 24 + h], vmax)}"/>`;
-    let k = 0; for (let m = 0; m < 12; m++) { s += `<text x="${(x0 + (k + MDAYS[m] / 2) * cw).toFixed(1)}" y="${Hd - 3}" text-anchor="middle">${MONTHS[m][0]}</text>`; k += MDAYS[m]; }
-    for (const h of [0, 6, 12, 18]) s += `<text x="${x0 - 4}" y="${y0 + h * ch + 7}" text-anchor="end">${String(h).padStart(2, "0")}:00</text>`;
-    return s + "</svg>";
-  }
+  /* hourly charts: Macro Clima's carpet and its temperature colour scale (K.PAL.temp, from CBE Clima), as in Macro Clima's
+     heat island card; one colour range for both charts, so they compare; click the colour bar to set it */
+  const tools = (id) => `<div class="tools"><button class="btn small" data-exp="svg" data-sec="${id}">SVG</button><button class="btn small" data-exp="png" data-sec="${id}">PNG</button><button class="btn small" data-exp="csv" data-sec="${id}">CSV</button></div>`;
+  const scaleOv = {};
+  const hourOf = (i) => { const d = Math.floor(i / 24), h = i % 24; let m = 0, dd = d; while (dd >= MDAYS[m]) dd -= MDAYS[m++]; return `${dd + 1} ${MONTHS[m]}, ${String(h).padStart(2, "0")}:00 to ${String(h + 1).padStart(2, "0")}:00`; };
   function carpetSection() {
-    const parts = [], zero = new Float64Array(8760);
-    const fut = R.fut ? R.fut.dh : zero, uhi = R.uhi ? R.uhi.uhi : zero;
-    let vmax = 0.5; for (let i = 0; i < 8760; i++) vmax = Math.max(vmax, fut[i], uhi[i]); vmax = Math.ceil(vmax * 2) / 2;
-    CAR.fut = fut; CAR.uhi = uhi;
-    parts.push(`<div class="carpet"><h3>Future climate, K</h3>${R.fut ? carpet("fut", fut, "Future change by day and hour", vmax) : `<p class="note">Present climate: no change.</p>`}</div>`);
-    parts.push(`<div class="carpet"><h3>Heat island, K</h3>${R.uhi ? carpet("uhi", uhi, "Heat island by day and hour", vmax) : `<p class="note">As recorded: no change.</p>`}</div>`);
-    return `<section class="part"><h2>Hour by hour<button class="info" data-g="carpets" aria-label="About the hourly charts">?</button></h2><div class="carpets">${parts.join("")}</div>
-      <div class="legend"><span>0 K</span><span class="bar" style="background:linear-gradient(90deg,${ramp(0, 1)},${ramp(1, 1)})"></span><span>${f1(vmax)} K</span></div></section>`;
+    K.resetHover();
+    const zero = new Float64Array(8760), fut = R.fut ? R.fut.dh : zero, uhi = R.uhi ? R.uhi.uhi : zero, a = R.W0.dbt, b = R.W.dbt;
+    let mx = 0; for (let i = 0; i < 8760; i++) mx = Math.max(mx, fut[i], uhi[i]);
+    const ov = scaleOv.dT, sc = K.scale({ ramp: "temp", lo: ov ? ov.lo : 0, hi: ov ? ov.hi : Math.max(1, Math.ceil(mx)), key: "dT" });
+    const one = (arr, label, what) => K.carpet({ vals: arr, scale: sc, unit: "K", label, W: 760, colorOf: (v) => sc.color(v),
+      tip: (i) => `<b>${hourOf(i)}</b><br>${what}: ${sg(arr[i], 2)} K<br>Air: ${f1(a[i])} °C as recorded, ${f1(b[i])} °C in the file` });
+    const parts = [];
+    parts.push(`<div class="carpet"><h3>Future climate, K</h3>${R.fut ? one(fut, "Future climate", "Future change") : `<p class="note">Present climate: no change.</p>`}</div>`);
+    parts.push(`<div class="carpet"><h3>Heat island, K</h3>${R.uhi ? one(uhi, "Heat island", "Heat island") : `<p class="note">As recorded: no change.</p>`}</div>`);
+    return `<section class="part" data-sec="hourly"><div class="ph"><h2>Hour by hour<button class="info" data-g="carpets" aria-label="About the hourly charts">?</button></h2>${tools("hourly")}</div>${parts.join("")}
+      <p class="note">One colour range for both charts. Click a colour bar to set it.</p></section>`;
   }
-  const CAR = {};
-  function hookCarpets() {
-    const tip = $("tip");
-    for (const svg of document.querySelectorAll("svg[data-car]")) {
-      const a = CAR[svg.dataset.car];
-      svg.addEventListener("mousemove", (e) => {
-        const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, x = (e.clientX - r.left) / r.width * vb.width, y = (e.clientY - r.top) / r.height * vb.height;
-        const d = Math.floor((x - 34) / 1.6), h = Math.floor((y - 4) / 7);
-        if (d < 0 || d > 364 || h < 0 || h > 23) { tip.style.display = "none"; return; }
-        let m = 0, dd = d; while (dd >= MDAYS[m]) dd -= MDAYS[m++];
-        tip.innerHTML = `<b>${dd + 1} ${MONTHS[m]}, ${String(h).padStart(2, "0")}:00 to ${String(h + 1).padStart(2, "0")}:00</b><br>${sg(a[d * 24 + h], 2)} K`;
-        tip.style.display = "block"; tip.style.left = Math.min(innerWidth - 200, e.clientX + 12) + "px"; tip.style.top = e.clientY + 12 + "px";
-      });
-      svg.addEventListener("mouseleave", () => (tip.style.display = "none"));
+
+  /* ---------------- chart and table downloads, as in Macro Clima ---------------- */
+  const safe = (t) => t.replace(/[^A-Za-z0-9 ._+-]/g, "").replace(/\s+/g, "_").slice(0, 120);
+  const srcLine = () => `Clima Morph · ${src.name.replace(/\.epw$/i, "")}${R.fut ? ` · +${st.level} °C` : ""}${R.uhi ? ` · ${st.ctx} (SVF ${st.svf.toFixed(2)}, vegetation ${st.fveg.toFixed(2)})` : ""} · ${new Date().toISOString().slice(0, 10)}`;
+  const TITLES = { table: "Month by month", hourly: "Hour by hour: added air temperature" };
+  function saveFile(name, blob) { const u = URL.createObjectURL(blob), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+  function csvOf(id) {
+    if (id === "table") { const t = document.querySelector('section[data-sec="table"] table'); return [...t.rows].map((r) => [...r.cells].map((c) => `"${c.textContent.trim()}"`).join(",")).join("\n"); }
+    const zero = new Float64Array(8760), fut = R.fut ? R.fut.dh : zero, uhi = R.uhi ? R.uhi.uhi : zero;
+    return ["hour of year,month,day,hour,future change (K),heat island (K),air temperature as recorded (C),air temperature in the file (C)"].concat(Array.from({ length: 8760 }, (_, i) => { const d = Math.floor(i / 24); let m = 0, dd = d; while (dd >= MDAYS[m]) dd -= MDAYS[m++]; return `${i + 1},${m + 1},${dd + 1},${i % 24 + 1},${fut[i].toFixed(3)},${uhi[i].toFixed(3)},${R.W0.dbt[i].toFixed(1)},${R.W.dbt[i].toFixed(2)}`; })).join("\n");
+  }
+  async function doExport(kind, id) {
+    const base = safe(`${src.name.replace(/\.epw$/i, "")}_${TITLES[id]}`);
+    try {
+      if (kind === "csv") { saveFile(base + ".csv", new Blob(["﻿" + csvOf(id)], { type: "text/csv" })); return; }
+      const sec = document.querySelector(`section[data-sec="${id}"]`), svgs = [...sec.querySelectorAll(".carpet svg")], tbls = [...sec.querySelectorAll("table.t")].map(tableToSvg);
+      const out = K.standalone(combineSvgs(svgs, tbls), TITLES[id], srcLine(), "");
+      if (kind === "svg") saveFile(base + ".svg", new Blob([out.svg], { type: "image/svg+xml" })); else saveFile(base + ".png", await K.svgToPng(out));
+    } catch (e) { toast(e.message || String(e)); }
+  }
+  // a table drawn as SVG text, for exports (as in Macro Clima)
+  function tableToSvg(t) {
+    const rows = [...t.rows].map((r) => [...r.cells].map((c) => c.textContent.trim())), ncol = Math.max(...rows.map((r) => r.length));
+    const colW = Array.from({ length: ncol }, (_, k) => Math.max(...rows.map((r) => (r[k] || "").length)) * 6.6 + 18), W = colW.reduce((a, b) => a + b, 0), rh = 20, H = rows.length * rh + 6;
+    const ns = "http://www.w3.org/2000/svg", g = document.createElementNS(ns, "svg"); g.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    let s = ""; rows.forEach((r, i) => { let x = 0; const y = 4 + i * rh; s += `<line x1="0" x2="${W}" y1="${y + rh}" y2="${y + rh}" stroke="#e6e9e4"/>`; r.forEach((v, k) => { const right = k > 0; s += `<text x="${right ? x + colW[k] - 8 : x + 4}" y="${y + 14}" text-anchor="${right ? "end" : "start"}" font-family="Helvetica, Arial, sans-serif" font-size="${i ? 12 : 10.5}" font-weight="${i ? 400 : 600}" fill="${i ? "#18201f" : "#5b6663"}">${esc(v)}</text>`; x += colW[k]; }); });
+    g.innerHTML = s; g.style.position = "absolute"; g.style.left = "-9999px"; document.body.appendChild(g); setTimeout(() => g.remove(), 2000); return g;
+  }
+  // several charts in one export, stacked, tables underneath (as in Macro Clima)
+  function combineSvgs(charts, tables) {
+    const ns = "http://www.w3.org/2000/svg", g = document.createElementNS(ns, "svg"); let y = 0, wMax = 0;
+    for (const x of charts) {
+      const t = x.closest(".carpet") && x.closest(".carpet").querySelector("h3"); // each chart keeps its heading in the export
+      if (t) { const e = document.createElementNS(ns, "text"); e.setAttribute("x", 4); e.setAttribute("y", y + 14); e.setAttribute("font-family", "Helvetica, Arial, sans-serif"); e.setAttribute("font-size", "13"); e.setAttribute("font-weight", "600"); e.setAttribute("fill", "#18201f"); e.textContent = t.textContent; g.appendChild(e); y += 22; }
+      const [, , w, h] = x.getAttribute("viewBox").split(/\s+/).map(Number), n = x.cloneNode(true); n.setAttribute("x", 0); n.setAttribute("y", y); n.setAttribute("width", w); n.setAttribute("height", h); g.appendChild(n); y += h + 12; wMax = Math.max(wMax, w);
     }
+    for (const t of tables) { const [, , w, h] = t.getAttribute("viewBox").split(/\s+/).map(Number), n = t.cloneNode(true); n.setAttribute("x", 0); n.setAttribute("y", y); n.setAttribute("width", w); n.setAttribute("height", h); g.appendChild(n); y += h + 12; wMax = Math.max(wMax, w); }
+    g.setAttribute("viewBox", `0 0 ${wMax} ${y}`); g.style.position = "absolute"; g.style.left = "-9999px"; document.body.appendChild(g); setTimeout(() => g.remove(), 2000); return g;
   }
+  function toast(m) { const t = $("tip"); t.innerHTML = esc(m); t.style.display = "block"; t.style.left = "50%"; t.style.top = "20px"; setTimeout(() => (t.style.display = "none"), 3500); }
+
+  /* ---------------- colour range: click a colour bar (as in Macro Clima) ---------------- */
+  let rpKey = null;
+  document.addEventListener("click", (ev) => {
+    const g = ev.target.closest && ev.target.closest("[data-scale]"), pop = $("rangepop");
+    if (!g) { if (!pop.hidden && !pop.contains(ev.target)) pop.hidden = true; return; }
+    rpKey = g.dataset.scale; $("rpLo").value = +(+g.dataset.lo).toPrecision(4); $("rpHi").value = +(+g.dataset.hi).toPrecision(4);
+    pop.hidden = false; pop.style.left = Math.min(innerWidth - 240, ev.clientX + 8) + "px"; pop.style.top = Math.min(innerHeight - 110, ev.clientY + 8) + "px"; $("rpLo").focus();
+  });
+  function applyRange(clear) {
+    if (!rpKey) return; const lo = parseFloat($("rpLo").value), hi = parseFloat($("rpHi").value);
+    if (clear) delete scaleOv[rpKey]; else if (isFinite(lo) && isFinite(hi) && hi > lo) scaleOv[rpKey] = { lo, hi }; else return;
+    $("rangepop").hidden = true; render();
+  }
+  $("rpApply").onclick = () => applyRange(false); $("rpReset").onclick = () => applyRange(true); $("rpClose").onclick = () => ($("rangepop").hidden = true);
+  $("rangepop").addEventListener("keydown", (e) => { if (e.key === "Enter") applyRange(false); if (e.key === "Escape") $("rangepop").hidden = true; });
+
+  /* ---------------- tooltip, as in Macro Clima ---------------- */
+  document.addEventListener("mousemove", (ev) => {
+    const tip = $("tip"), el = ev.target.closest && ev.target.closest("[data-hov]");
+    if (!el) { tip.style.display = "none"; return; }
+    const fn = K.hov[el.dataset.hov], svg = el.ownerSVGElement || el; let html = null;
+    if (fn && svg.getScreenCTM) { const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY; const lp = pt.matrixTransform(svg.getScreenCTM().inverse()); html = fn(lp.x, lp.y); }
+    if (!html) { tip.style.display = "none"; return; }
+    tip.innerHTML = html; tip.style.display = "block";
+    const r = tip.getBoundingClientRect(); let x = ev.clientX + 14, y = ev.clientY + 14; if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14; if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 14; tip.style.left = x + "px"; tip.style.top = y + "px";
+  });
 
   /* ---------------- download ---------------- */
   function download() {
@@ -207,7 +255,7 @@
   const slide = () => { st.svf = +$("svf").value; st.fveg = +$("fveg").value; const p = Object.keys(PRESETS).find((k) => PRESETS[k].svf === st.svf && PRESETS[k].fveg === st.fveg); st.ctx = p || "custom"; run(); };
   $("svf").oninput = slide; $("fveg").oninput = slide;
   $("dlBtn").onclick = download;
-  $("main").addEventListener("click", (e) => { if (e.target.closest("[data-dl]")) download(); });
+  $("main").addEventListener("click", (e) => { if (e.target.closest("[data-dl]")) download(); const x = e.target.closest("[data-exp]"); if (x) doExport(x.dataset.exp, x.dataset.sec); });
   $("linkBtn").onclick = async () => { writeHash(); try { await navigator.clipboard.writeText(location.href); $("linkBtn").textContent = "Link copied"; } catch (e) { $("linkBtn").textContent = "Copy the address bar"; } setTimeout(() => ($("linkBtn").textContent = "Copy a link to these settings"), 1800); };
   document.addEventListener("click", (e) => { const q = e.target.closest("[data-g]"); if (q) openGuide(q.dataset.g); });
   $("guideBtn").onclick = () => openGuide("what"); $("scrim").onclick = closeGuide;
