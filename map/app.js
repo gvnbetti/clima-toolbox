@@ -14,7 +14,7 @@
     room: '<path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="43" cy="14.95" r="4.5" fill="#d9762b"/><path d="M50 43V38H14V56H50V51" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>',
     morph: '<path d="M10 34A22 22 0 0 1 54 34" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="43" cy="14.95" r="4.5" fill="#d9762b"/><path d="M6 56H58M32 50V40M25 46L32 39L39 46" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>',
   };
-  $("open").innerHTML = [["macro", "Macro Clima", "macro/index.html"], ["micro", "Micro Clima", "micro/index.html"], ["room", "Room Clima", "room/build/index.html"], ["morph", "Clima Morph", "morph/index.html"]]
+  $("open").innerHTML = [["morph", "Clima Morph", "morph/index.html"], ["macro", "Macro Clima", "macro/index.html"], ["micro", "Micro Clima", "micro/index.html"], ["room", "Room Clima", "room/build/index.html"]]
     .map(([k, n, p]) => `<a href="${BASE + p}" target="_blank" rel="noopener"><svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">${ICON[k]}</svg>${n}</a>`).join("");
 
   // ------------------------------------------------------------ map
