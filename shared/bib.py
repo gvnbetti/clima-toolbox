@@ -70,6 +70,7 @@ B = {
 "reda2004": "Reda, I., & Andreas, A. (2004). Solar position algorithm for solar radiation applications. *Solar Energy, 76*(5), 577–589. https://doi.org/10.1016/j.solener.2003.12.003",
 "roudsari2013": "Sadeghipour Roudsari, M., & Pak, M. (2013). Ladybug: A parametric environmental plugin for Grasshopper to help designers create an environmentally-conscious design. In *Proceedings of BS2013: 13th Conference of the International Building Performance Simulation Association*, Chambéry, France. IBPSA.",
 "tartarini2020": "Tartarini, F., & Schiavon, S. (2020). pythermalcomfort: A Python package for thermal comfort research. *SoftwareX, 12*, 100578. https://doi.org/10.1016/j.softx.2020.100578",
+"oke1982": "Oke, T. R. (1982). The energetic basis of the urban heat island. *Quarterly Journal of the Royal Meteorological Society, 108*(455), 1–24. https://doi.org/10.1002/qj.49710845502",
 "theeuwes2017": "Theeuwes, N. E., Steeneveld, G. J., Ronda, R. J., & Holtslag, A. A. M. (2017). A diagnostic equation for the daily maximum urban heat island effect for cities in northwestern Europe. *International Journal of Climatology, 37*(1), 443–454. https://doi.org/10.1002/joc.4717",
 "usdoe2025": "U.S. Department of Energy. (2025). *EnergyPlus version 25.2 documentation: Engineering reference*. https://energyplus.net/documentation",
 "pyenergyplus": "Wang, T. (n.d.). *pyenergyplus_lbnl: Standalone Python package of the EnergyPlus API* (Version 25.2.0) [Computer software]. Lawrence Berkeley National Laboratory. https://github.com/taoning/pyenergyplus",

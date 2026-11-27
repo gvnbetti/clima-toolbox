@@ -1,6 +1,6 @@
 """Writes climamods.js, the calculation core shared by Macro, Micro and Room Clima: sun position, sun on surfaces
 (Perez), psychrometrics, SolarCal, sky longwave, UTCI, and the future climate and urban heat island modifiers. The code
-is copied verbatim from Macro Clima's core.js and app.js (blocks below), so the three apps compute these the same way.
+is copied verbatim from Macro Clima's core.js and app.js (blocks below), so the apps compute these the same way (Macro, Micro and Room Clima, and Clima Morph).
 Usage: python3 shared/mkmods.py macro shared/climamods.js"""
 import sys, re, hashlib, pathlib
 M = pathlib.Path(sys.argv[1]); out = pathlib.Path(sys.argv[2])

@@ -1,16 +1,16 @@
 # Future and urban climate: method
 
 ## A shared module
-Future and Urban Climate is a shared module used by Macro Clima, Micro Clima and Room Clima. It applies the same
-climate adjustments consistently across all three apps. Clima Map is the exception: it helps select and download the
-original weather file but does not modify it.
+Future and Urban Climate is a shared module used by Macro Clima, Micro Clima, Room Clima and Clima Morph. It applies the same
+climate adjustments consistently across all of them. Clima Morph writes the adjusted weather into an EPW file for other
+simulation tools. Clima Map is the exception: it helps select and download the original weather file but does not modify it.
 
 The module provides two ways to adjust a weather file: to account for future global warming and to represent the
 additional heat associated with the urban environment.
 
 Both modifiers are calculated centrally in Macro Clima (`macro/core.js`) and shared with the other apps through the
 calculation core `shared/climamods.js`, produced by `shared/mkmods.py`. Room Clima and Micro Clima both embed this
-generated core, so the three apps give identical results.
+generated core, and Clima Morph loads it directly, so all four give identical results.
 
 ## What it is for
 A typical-year weather file describes recent climatic conditions at a particular location, usually an open site such
@@ -79,14 +79,15 @@ The resulting maximum daily heat island is distributed across the hours of the d
 temperature. Vapour pressure is held constant.
 
 ### Assumptions
-**Daily temperature profile.** The full maximum heat island is applied at night. During daylight hours, it decreases
-according to the sun's altitude, following the apps' own profile:
+**Which day a value belongs to.** Theeuwes et al. (2017) define the heat island per day, but not over a calendar day. Daily solar radiation (S) is the mean over the calendar day, from 00:00 to 24:00. The diurnal temperature range (DTR) and the mean wind speed (U) are taken over the 24 hours from 08:00 to 07:00 the next morning, as in the original study. The resulting UHI<sub>max</sub> applies to the same window: the day's sun builds the heat island, and it is released in the evening and night that follow. The first hours of the file, before 08:00 on 1 January, take the value of 31 December. Global radiation is rebuilt from the file's direct normal and diffuse radiation. Wind below 0.5 m/s is set to 0.5 m/s, to keep the equation finite in calm conditions.
+
+**Daily temperature profile.** The original equation gives only the daily maximum. Observed urban heat islands are strongest at night and weak by day, because the city stores heat during the day and releases it after sunset (Oke, 1982). The apps follow this pattern with their own profile. With the sun below the horizon, the full value applies. During daylight it decreases with the sun's altitude:
 
 <p align="center">UHI(h) = UHI<sub>max</sub> × (1 − 0.85 × √(sin α<sub>h</sub> / sin α<sub>max</sub>))</p>
 
-where α<sub>h</sub> is the sun's altitude at a given hour and α<sub>max</sub> is its highest altitude that day. This
-leaves 15% of the maximum heat island at solar noon. This hourly profile is an implementation choice developed for the
-apps, rather than a profile proposed in the original paper.
+where α<sub>h</sub> is the sun's altitude at the middle of hour h and α<sub>max</sub> is the highest altitude that day. At solar noon 15% of the maximum remains. The square root lets the heat island fall quickly after sunrise and recover late in the afternoon. On days when the sun stays very low, sin α<sub>max</sub> is held at no less than 0.05. The profile, its 15% midday floor and its shape are assumptions made for the apps. They are not taken from the original paper and have not been fitted to measurements.
+
+**What changes in the weather data.** The hourly heat island is added to the air temperature. Vapour pressure is held, so dew point and humidity ratio stay as recorded and relative humidity falls, limited to between 1% and 100%. Sky longwave radiation, solar radiation and wind are not changed.
 
 **Neighbourhood presets.** Three representative urban conditions are available, defined by their sky view factor and
 vegetation fraction:
@@ -117,7 +118,7 @@ The urban heat island calculation is checked against an independent implementati
 published by Theeuwes et al. (2017): see [urban heat island](../../validation/urban-heat-island/).
 
 ## References
-<!-- refs: gutierrez2021 iturbide2021 iturbide2020 eyring2016 belcher2005 theeuwes2017 mccarty -->
+<!-- refs: gutierrez2021 iturbide2021 iturbide2020 eyring2016 belcher2005 theeuwes2017 oke1982 mccarty -->
 
 Belcher, S. E., Hacker, J. N., & Powell, D. S. (2005). Constructing design weather data for future climates. *Building Services Engineering Research and Technology, 26*(1), 49–61. https://doi.org/10.1191/0143624405bt112oa
 
@@ -130,5 +131,7 @@ Iturbide, M., Fernández, J., Gutiérrez, J. M., Bedia, J., Cimadevilla, E., Dí
 Iturbide, M., Gutiérrez, J. M., Alves, L. M., Bedia, J., Cerezo-Mota, R., Cimadevilla, E., Cofiño, A. S., Di Luca, A., Faria, S. H., Gorodetskaya, I. V., Hauser, M., Herrera, S., Hennessy, K., Hewitt, H. T., Jones, R. G., Krakovska, S., Manzanas, R., Martínez-Castro, D., Narisma, G. T., … Vera, C. S. (2020). An update of IPCC climate reference regions for subcontinental analysis of climate model data: Definition and aggregated datasets. *Earth System Science Data, 12*(4), 2959–2970. https://doi.org/10.5194/essd-12-2959-2020
 
 McCarty, J. (n.d.). *pyepwmorph* (Version 3.6.1) [Computer software]. https://github.com/justinfmccarty/pyepwmorph
+
+Oke, T. R. (1982). The energetic basis of the urban heat island. *Quarterly Journal of the Royal Meteorological Society, 108*(455), 1–24. https://doi.org/10.1002/qj.49710845502
 
 Theeuwes, N. E., Steeneveld, G. J., Ronda, R. J., & Holtslag, A. A. M. (2017). A diagnostic equation for the daily maximum urban heat island effect for cities in northwestern Europe. *International Journal of Climatology, 37*(1), 443–454. https://doi.org/10.1002/joc.4717

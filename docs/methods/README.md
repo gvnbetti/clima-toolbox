@@ -33,7 +33,7 @@ mathematics runs underneath these apps, and we try to be as transparent about it
 the methods and validation pages. Some assumptions are self-evident; others are there for expert users to question and
 challenge. All the tools are free to use and free to inspect, in the hope that others will help us make them better.
 
-## The four apps
+## The five apps
 
 **Clima Map** finds the most appropriate weather file for a given location.
 
@@ -45,6 +45,9 @@ materials, wind protection and enclosure.
 
 **Room Clima** explores the relationship between a room and its facade, testing windows, glazing, shading, thermal mass
 and ventilation, and their effects on energy use, comfort, daylight and carbon.
+
+**Clima Morph** writes the future and urban climate into the weather file itself, so that the same conditions can be
+carried into other simulation tools.
 
 ## Principles
 
@@ -88,7 +91,8 @@ inspected.
 |---|---|
 | [Clima Map](clima-map.md) | weather station catalogue, place search, choice of file |
 | [Macro Clima](macro-clima.md) | sun, surfaces, psychrometrics, comfort, strategies, derived readings |
-| [Future and urban climate](climate-scenarios.md) | morphing to levels of global warming; urban heat island (shared by Macro, Micro and Room Clima) |
+| [Future and urban climate](climate-scenarios.md) | morphing to levels of global warming; urban heat island (shared by Macro, Micro, Room Clima and Clima Morph) |
+| [Clima Morph](clima-morph.md) | writing the future and urban climate into a valid EPW file |
 | [Micro Clima](micro-clima.md) | ground and wall heat balance, radiant exchange, trees and canopies, enclosures, UTCI |
 | [Room Clima](room-clima.md) | hourly room model, ventilation, blinds, comfort, daylight, scores, scenarios |
 | [Room Clima: carbon](room-clima-carbon.md) | whole-life carbon of the design options |
