@@ -72,9 +72,17 @@ table.t td:first-child, table.t th:first-child { text-align: left; font-family: 
 table.t tr.yr td { font-weight: 600; border-top: 1px solid var(--line) }
 table.t td.d { color: var(--warm) }
 .tscroll { overflow-x: auto }
-.carpets { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap: 16px; margin-top: 8px }
+.carpet { margin-top: 10px; max-width: 900px }
 .carpet h3 { font: 600 14px var(--f-body); margin: 0 0 4px }
-.carpet svg { display: block; width: 100%; height: auto }
+.carpet svg { display: block; width: 100%; height: auto; overflow: visible }
+section.part > .ph { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 4px }
+section.part > .ph h2 { font: 600 20px/1.2 var(--f-disp); margin: 0; flex: 1; display: flex; align-items: center; gap: 4px }
+.tools { display: flex; gap: 4px; flex-wrap: wrap; align-items: center }
+.btn.small { font-size: 12px; padding: 3px 7px }
+svg .ax line, svg .ax path { stroke: var(--line) }
+svg .ink { fill: var(--ink) }
+#rangepop { position: fixed; z-index: 60; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px; box-shadow: 0 4px 18px rgba(0,0,0,.18); display: flex; flex-direction: column; gap: 6px; font-size: 12px; width: 220px }
+#rangepop .row label { flex: 0 0 auto } #rangepop input { width: 70px; font: 13px var(--f-body); padding: 3px 5px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg) }
 svg text { font-family: var(--f-body); fill: var(--mute); font-size: 10px }
 .legend { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--mute); margin-top: 4px }
 .legend .bar { flex: 0 0 160px; height: 9px; border-radius: 2px }
@@ -156,10 +164,12 @@ svg text { font-family: var(--f-body); fill: var(--mute); font-size: 10px }
   </div>
 </div>
 <div id="tip"></div>
+<div id="rangepop" hidden><div class="lab" id="rpTitle">Colour range</div><div class="row"><label for="rpLo">Min</label><input type="number" step="any" id="rpLo"><label for="rpHi">Max</label><input type="number" step="any" id="rpHi"></div><div class="row"><button class="btn small primary" id="rpApply">Apply</button><button class="btn small" id="rpReset">Automatic</button><button class="btn small" id="rpClose">Close</button></div></div>
 <div id="scrim" hidden></div>
 <aside id="guide" aria-label="Guide" aria-hidden="true"></aside>
 <script src="../macro/vendor/fflate-0.8.2/index.js?v=202611271600"></script>
 <script src="../macro/core.js?v=202611271600"></script>
+<script src="../macro/kit.js?v=202611271700"></script>
 <script src="../macro/future.js?v=202611271600"></script>
 <script src="../macro/regions.js?v=202611271600"></script>
 <script src="../shared/climamods.js?v=202611271600"></script>
