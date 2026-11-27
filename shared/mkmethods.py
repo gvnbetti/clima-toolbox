@@ -8,7 +8,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent)); import addbar as A
 ROOT = pathlib.Path(__file__).resolve().parent.parent; SRC = ROOT / 'docs' / 'methods'
 GH = 'https://github.com/gvnbetti/clima-toolbox'
 PAGES = [('README.md', 'methods.html', 'Overview'), ('clima-map.md', 'methods/map.html', 'Clima Map'),
-         ('clima-morph.md', 'methods/morph.html', 'Clima Morph'),
+         ('clima-morph.md', 'methods/morph.html', 'Clima Morph'), ('clima-compare.md', 'methods/compare.html', 'Clima Compare'),
          ('macro-clima.md', 'methods/macro.html', 'Macro Clima'), ('climate-scenarios.md', 'methods/climate.html', 'Future and urban climate'),
          ('micro-clima.md', 'methods/micro.html', 'Micro Clima'), ('room-clima.md', 'methods/room.html', 'Room Clima'),
          ('room-clima-carbon.md', 'methods/room-carbon.html', 'Room Clima: carbon')]

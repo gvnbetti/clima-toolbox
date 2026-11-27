@@ -97,6 +97,38 @@
   S.CC_FAMILY = {}; S.FAMILIES.forEach((f, idx) => f[3].forEach((k) => (S.CC_FAMILY[k] = idx))); S.CC_FAMILY.shade = -1; S.CC_FAMILY.windProt = -1;
 
 
+  /* ---------------- strategy zone outlines on the psychrometric chart (Macro Clima and Clima Compare) ---------------- */
+  S.zoneOutlines = function (Z, P, keys) {
+    const out = [], p = 101325, tLo = -15, tHi = 45, wHi = 30, x0 = 48, y0 = 14, w = 640, h = 410;
+    const Xp = (t) => x0 + w * (Math.max(tLo, Math.min(tHi, t)) - tLo) / (tHi - tLo), Yp = (wg) => y0 + h - h * wg / wHi;
+    const wbAt = (t, wk) => C.wetBulb(t, wk, p);
+    const tForWb = (wb, wk) => { let lo = wb, hi = 60; for (let k = 0; k < 30; k++) { const m = (lo + hi) / 2; if (wbAt(m, wk) > wb) hi = m; else lo = m; } return (lo + hi) / 2; };
+    const tForRh = (rh, wk) => C.dewFromPw(C.pwFromW(wk, p) / (rh / 100)); // temperature where this humidity ratio has the given RH
+    const iv = { // interval of temperature, per humidity ratio (kg/kg)
+      comfort: (wk, cv) => (wk <= P.comfort.wMax ? [cv.lo, cv.hi] : null),
+      dehumid: (wk, cv) => (wk > P.comfort.wMax ? [cv.lo, cv.hi] : null),
+      humid: (wk, cv) => (wk < P.humid.wMin ? [cv.lo, cv.hi] : null),
+      internal: (wk, cv) => [P.internal.balance, cv.lo],
+      solarLow: (wk, cv) => [cv.lo - P.solarLow.dT, cv.lo], solarHigh: (wk, cv) => [cv.lo - P.solarHigh.dT, cv.lo],
+      fan: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, Math.min(cv.hi + P.fan.dT, tForRh(P.fan.rhMax, wk) > cv.hi ? cv.hi + P.fan.dT : cv.hi)] : null),
+      natVent: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, cv.hi + P.natVent.dT] : null),
+      mass: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, cv.hi + P.mass.dT] : null), massNight: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, cv.hi + P.massNight.dT] : null),
+      evap: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, Math.min(P.evap.tMax, tForWb(P.evap.wbMax, wk))] : null), evap2: (wk, cv) => (wk <= P.comfort.wMax ? [cv.hi, Math.min(P.evap2.tMax, tForWb(P.evap2.wbMax, wk))] : null),
+      shade: () => [P.shade.tMin, 45], windProt: () => [-15, P.windProt.tMax]
+    };
+    const SHORT = { comfort: "Comfort", dehumid: "Dehumidify", humid: "Humidify", internal: "Internal gains", solarLow: "Solar, low mass", solarHigh: "Solar, high mass", fan: "Fan", natVent: "Natural vent.", mass: "Mass", massNight: "Mass + night vent.", evap: "Direct evap.", evap2: "Two-stage evap.", shade: "Shading", windProt: "Wind protection", heat: "", cool: "" };
+    const names = Object.fromEntries(C.CC_KEYS);
+    for (const k of keys) {
+      if (!iv[k]) continue; const left = [], right = [];
+      for (let wg = 0; wg <= wHi; wg += 0.25) { const wk = wg / 1000, cv = C.curveAt(Z.grid, wk), r = iv[k](wk, cv); if (!r) continue; let [a, b] = r; const td = C.dewFromPw(Math.max(1, C.pwFromW(wk, p))); a = Math.max(a, td); if (b <= a) continue; left.push([Xp(a), Yp(wg)]); right.push([Xp(b), Yp(wg)]); }
+      if (left.length < 2) continue;
+      const pts = left.concat(right.reverse()); const d = "M" + pts.map((q) => q[0].toFixed(1) + "," + q[1].toFixed(1)).join("L") + "Z";
+      const fam = S.CC_FAMILY[k], col = fam >= 0 ? S.FAMILIES[fam][2] : "#5b6663";
+      const mid = left[Math.floor(left.length * 0.25)]; out.push({ k, d, col, name: names[k], short: SHORT[k], lx: (mid[0] + right[right.length - 1 - Math.floor(left.length * 0.25)][0]) / 2 - 20, ly: mid[1] });
+    }
+    return out;
+  };
+
   /* ---------------- adaptive comfort models ---------------- */
   S.ADAPT = [
     ["en1", "EN 16798-1, category I"], ["en2", "EN 16798-1, category II"], ["en3", "EN 16798-1, category III"],

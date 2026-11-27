@@ -1,0 +1,139 @@
+{
+ "identity_with_macro": {
+  "cases": [
+   {
+    "file": "DEU_BE_Berlin-Tegel.AP.103820_TMYx.epw",
+    "future": 0,
+    "context": null,
+    "values_compared": 62,
+    "largest_difference": 0.005
+   },
+   {
+    "file": "EGY_QH_Cairo.Intl.AP.623660_TMYx.epw",
+    "future": 2,
+    "context": "urban",
+    "values_compared": 61,
+    "largest_difference": 0.005
+   }
+  ],
+  "pass": true,
+  "rule": "Macro Clima's CSV values (2 decimals or more) against Clima Compare's, |difference| <= 0.005"
+ },
+ "self_comparison": {
+  "cells": 100,
+  "nonzero": 0,
+  "reading": "The two files hold the same weather, hour by hour, so every difference below is zero. Load another file, or set a future",
+  "pass": true
+ },
+ "swap": {
+  "cells": 100,
+  "mismatches": [],
+  "pass": true
+ },
+ "solar_time": {
+  "cases": [
+   {
+    "lon": -3.7242,
+    "tz": 1,
+    "etrClock": 12.756107106219703,
+    "etrSolar": 11.500557162397335,
+    "sunClock": 13.255939216966393,
+    "sunSolar": 11.99972157144636,
+    "ghiClock": 12.734320698213354,
+    "ghiSolar": 11.475115535716997,
+    "annualChange": 2.1917679360044965e-10,
+    "file": "ESP_MD_Madrid.WS.082200_TMYx.epw"
+   },
+   {
+    "lon": 72.868,
+    "tz": 5.5,
+    "etrClock": 12.142528665154208,
+    "etrSolar": 11.497457383170397,
+    "sunClock": 12.647354052974292,
+    "sunSolar": 12.0019405831499,
+    "ghiClock": 12.684042260797092,
+    "ghiSolar": 12.038405946633542,
+    "annualChange": -6.46352259119499e-10,
+    "file": "IND_MH_Mumbai-Shivaji.Intl.AP.430030_TMYx.epw"
+   },
+   {
+    "lon": 121.336,
+    "tz": 8,
+    "etrClock": 11.416105789150807,
+    "etrSolar": 11.499893484139937,
+    "sunClock": 11.916908581791695,
+    "sunSolar": 12.000269870220762,
+    "ghiClock": 12.403379969990482,
+    "ghiSolar": 12.485363345051681,
+    "annualChange": -4.930087860164722e-10,
+    "file": "CHN_SH_Shanghai-Hongqiao.Intl.AP.583670_TMYx.epw"
+   },
+   {
+    "lon": 13.3089,
+    "tz": 1,
+    "etrClock": 11.623760203487198,
+    "etrSolar": 11.500179205217627,
+    "sunClock": 12.122979527419494,
+    "sunSolar": 11.99860521592459,
+    "ghiClock": 12.55770429694993,
+    "ghiSolar": 12.43179790560467,
+    "annualChange": 4.4316378458073353e-10,
+    "file": "DEU_BE_Berlin-Tegel.AP.103820_TMYx.epw"
+   },
+   {
+    "lon": -99.183,
+    "tz": -6,
+    "etrClock": 12.11297535922442,
+    "etrSolar": 11.497846113960795,
+    "sunClock": 12.617065063350717,
+    "sunSolar": 12.001522322169235,
+    "ghiClock": 11.965942805506078,
+    "ghiSolar": 11.347672577838535,
+    "annualChange": 2.1065149703106593e-11,
+    "file": "MEX_CMX_Ciudad.Mexico.Central.766800_TMYx.epw"
+   },
+   {
+    "lon": 103.994,
+    "tz": 8,
+    "etrClock": 13.06625461452613,
+    "etrSolar": 11.999301651268443,
+    "sunClock": 13.0660731626709,
+    "sunSolar": 11.998895915487699,
+    "ghiClock": 13.111643421956298,
+    "ghiSolar": 12.046215156039024,
+    "annualChange": 4.4818127196112146e-11,
+    "file": "SGP_SG_Singapore-Changi.Intl.AP.486980_Custom.epw"
+   }
+  ],
+  "rule": "in solar time the centroid of the mean daily course of the sun's height (shared sun position, at the middle of each file hour) lies within 0.05 h of 12:00; annual totals unchanged within 0.1 %. The file's own extraterrestrial and global radiation are listed for information.",
+  "pass": true
+ },
+ "season_shift": {
+  "off": {
+   "shifted": null,
+   "maxMonthlyDiff": 18.156720431611664,
+   "warmA": 6,
+   "warmB": 0,
+   "meanB": 11.064657534382489
+  },
+  "on": {
+   "shifted": "B",
+   "maxMonthlyDiff": 0,
+   "hoursDiffering": 0,
+   "warmA": 6,
+   "warmB": 6,
+   "meanB": 11.064657534382489,
+   "note": "On: file B, south of the equator, is shown half a year later, so summer meets summer."
+  },
+  "pass": true,
+  "note": "No southern-hemisphere file is bundled; the test uses Berlin's data rolled by 182 days with the latitude negated, so after the shift both files must match hour by hour."
+ },
+ "readings": {
+  "numbers": 41,
+  "badLinks": [],
+  "notInGlance": [],
+  "pass": true
+ },
+ "page_errors": [],
+ "all_pass": true
+}

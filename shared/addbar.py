@@ -1,4 +1,4 @@
-"""Inserts (or replaces) the Clima Toolbox bar at the top of an app page: the umbrella mark, the five apps, and links to
+"""Inserts (or replaces) the Clima Toolbox bar at the top of an app page: the umbrella mark, the six apps, and links to
 methods, validation, source, about and impressum. The block sits between two marker comments right after <body>, so running this again replaces it.
 Links are absolute, so the bar also works where an app runs as a Claude artifact.
 Usage: python3 addbar.py <app id: map|macro|micro|room|morph> <html file> [...more pairs]"""
@@ -17,9 +17,10 @@ GLYPH = {
     'micro': ARC + f'<path d="M6 56H58M24 48V56M42 49V56" {S}/><circle cx="24" cy="41" r="7" {S}/><circle cx="42" cy="45" r="3" fill="{INK}"/>',
     'room': ARC + f'<path d="M50 43V38H14V56H50V51" {S}/>',
     'morph': ARC + f'<path d="M6 56H58M32 50V40M25 46L32 39L39 46" {S}/>',
+    'compare': ARC + f'<path d="M12 56H52M24 56V45M40 56V39" {S}/>',
 }
 APPS = [('map', 'Clima Map', 'map/index.html', 'Find a weather file'), ('morph', 'Clima Morph', 'morph/index.html', 'Export a future or urban weather file'),
-        ('macro', 'Macro Clima', 'macro/index.html', 'Read the climate'), ('micro', 'Micro Clima', 'micro/index.html', 'Outdoor comfort'),
+        ('compare', 'Clima Compare', 'compare/index.html', 'Compare two weather files'), ('macro', 'Macro Clima', 'macro/index.html', 'Read the climate'), ('micro', 'Micro Clima', 'micro/index.html', 'Outdoor comfort'),
         ('room', 'Room Clima', 'room/build/index.html', 'Room and facade')]
 svg = lambda k, s: f'<svg width="{s}" height="{s}" viewBox="0 0 64 64" aria-hidden="true">{GLYPH[k]}</svg>'
 
