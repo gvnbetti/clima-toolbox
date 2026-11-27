@@ -333,7 +333,7 @@
     "run.day.levels": { v: [0, 1, 2], unit: "code", status: "decision", src: "Decision of 17 November 2026", text: "Day window ventilation: 0 none, 1 tilt windows, 2 side-hung windows open. Air flow from the opening by EN 16798-7; in the DIN 4108-2 check any day opening counts as 3 1/h" },
     "run.night.levels": { v: [0, 1, 5], unit: "code", status: "decision", src: "Decision of 17 November 2026", text: "Night ventilation: 0 none, 1 tilt windows secured at night (air flow by EN 16798-7; 2 1/h in the DIN 4108-2 check), 5 air across storeys (atrium, stair) or a fan system, 5 1/h as DIN 4108-2 (off by default)" },
     "vent.method": { v: { cst: 0.0035, cwnd: 0.001, k: 1800 }, unit: "q = k · A · √(C_st · h · ΔT), m³/h", status: "secondary", src: "EN 16798-7:2017, single-sided airing (coefficients as quoted by REHVA and AIVC, 2022); wind term off by decision of 17 November 2026", text: "Window air flow each hour from the effective opening area A, the sash height h and the indoor-outdoor temperature difference; wind is not credited, since site wind is unknown at concept stage. The method is built to underestimate. Openings on two facades are added as two single-sided openings, without cross ventilation" },
-    "vent.openShare": { v: 0.5, unit: "share of window area", status: "decision", src: "Decision of 17 November 2026", text: "Openable sash area: half of the window area (fixed, not editable)" },
+    "vent.sash": { v: { w: 0.6, h: 1.5, facade: 2.7 }, unit: "m", status: "decision", src: "Decision of 27 November 2026 (replaces half the window area, decision of 17 November 2026)", text: "Openable sash: 0.6 m wide and 1.5 m tall for a facade 2.7 m wide, its area scaled by the facade width (4.05 m: 1.35 m²), or the window area where the window is smaller. Opening height 1.5 m, or the window height where lower. The same sash for tilt and fully open windows, by day and at night. A larger window no longer means a larger opening" },
     "vent.tilt": { v: { angle: 10, ck: 0.174 }, unit: "°, factor", status: "secondary", src: "EN 16798-7 opening-angle factor C_k(α) = 2.6·10⁻⁷ α³ − 1.19·10⁻⁴ α² + 1.86·10⁻² α (from EN 15242)", text: "Tilt windows at 10°: effective area 17 % of the sash area. Side-hung windows fully open: the whole sash area" },
     "vent.depthMax": { v: 2.5, unit: "× room height", status: "standard", src: "ASR A3.6, Table 3", text: "Workplaces: a room ventilated from one side may be at most 2.5 times its clear height deep" },
     "asr.tilt": { v: 0.35, unit: "m² per person present", status: "standard", src: "ASR A3.6, Table 3 (single-sided, continuous ventilation)", text: "Workplaces: effective opening for continuous ventilation by tilt windows, single-sided" },
@@ -345,8 +345,9 @@
     "run.night.margin": { v: 2, unit: "K", status: "decision", src: "Spec of 23 October 2026", text: "Windows open at night when the room air is above the heating setpoint and at least 2 K warmer than outside" },
     "run.night.arm": { v: 24, unit: "°C operative", status: "decision", src: "Decision of 12 November 2026", text: "Night ventilation runs only after a warm day: when the operative temperature in the last presence period exceeded 24 °C" },
     "run.vent.floor": { v: 2, unit: "K above the heating setpoint", status: "decision", src: "Decision of 12 November 2026, after tests in three climates", text: "Window air flow is reduced in the hour so that the operative temperature does not fall below the heating setpoint plus 2 K (23 °C non-residential, 22 °C residential); windows never open while heating runs" },
-    "run.blinds": { v: "DIN 4108-2 irradiance", status: "decision", src: "Decision of 17 November 2026", text: "Every run, exterior and interior blinds alike: blinds come down when the sun on the window exceeds the DIN 4108-2 threshold (8.4.2 j), whatever the room temperature. The same hours apply to daylight" },
-    "run.blind.heatHold": { v: 23, unit: "°C", status: "decision", src: "Decision of 17 November 2026", text: "Design runs: blinds stay up while the room air is at or below 23 °C, to keep winter sun; above it they follow the DIN 4108-2 irradiance thresholds. The DIN 4108-2 check uses the thresholds alone" },
+    "run.blinds": { v: "comfort-driven (default) or DIN 4108-2 irradiance", status: "decision", src: "Decisions of 17 and 27 November 2026", text: "Every design run, exterior and interior blinds alike, follows the blind control chosen in the inputs: comfort-driven (default everywhere) or the DIN 4108-2 thresholds (8.4.2 j). The same hours apply to daylight. The DIN 4108-2 check always uses the thresholds alone" },
+    "run.blind.comfort": { v: { tOp: 26, irr: 100 }, unit: "°C operative, W/m² on the window", status: "decision", src: "Decision of 27 November 2026", text: "Comfort-driven blinds: down when the operative temperature of the room in the previous hour is above 26 °C or the upper edge of the comfort band, whichever is lower, and the sun on the window is above 100 W/m². Every orientation. Operative temperature, as the comfort limits of EN 16798-1 and ASHRAE 55 are stated" },
+    "run.blind.heatHold": { v: 23, unit: "°C", status: "decision", src: "Decision of 17 November 2026", text: "Design runs with DIN 4108-2 blind control: blinds stay up while the room air is at or below 23 °C, to keep winter sun; above it they follow the DIN 4108-2 irradiance thresholds. The DIN 4108-2 check uses the thresholds alone" },
     "dl.blindRef": { v: { mass: "medium", uglass: 0.8, gglass: 0.45, opaque: "u15", dayAch: 1, nightAch: 0 }, unit: "design", status: "assumption", src: "Decision of 17 November 2026 (daylight with the blind hours of the thermal runs)", text: "Daylight with blinds: the hours with blinds down come from a heated run of a reference room with the same window size, fixed shading, orientation and blind type (medium mass, triple glazing g 0.45, tilt windows by day). Daylight is computed once per window size and orientation, not per design" },
     "score.shape": { v: "d = 1 / (1 + x)", unit: "score 0 to 1", status: "decision", src: D17 + " (absolute scales, brief section 6)", text: "Scores on fixed scales, never against the run: daylight is the useful daylight share; comfort 1 with no overheating, 0.5 at the limit, 1/3 at twice the limit; energy 1 at or below the target, 0.5 at the limit. Scores never reach 0, so designs that miss a target are still ranked; whether a design meets the targets is decided separately" },
     "score.dl": { v: { target: 40, words: [40, 60, 80], overlit: 10 }, unit: "% of floor and hours", status: "assumption", src: "Proposal of the brief, section 9; to calibrate against the EN 17037 levels on the test rooms", text: "Daylight answer from the useful daylight share: below 40 % not enough, 40 to 60 % sufficient, 60 to 80 % good, 80 % and more very good. The target is met from 40 % (EN 17037 rating: from the minimum level). Flag: over-lit when more than 10 % of floor and hours are above the useful range" },
@@ -1601,7 +1602,7 @@ const ENGINE = { solOnWindows: false, skySplit: true };
     const dinMask = useKey === "dwelling" ? new Uint8Array(8760).fill(1) : s.occ;
     if (!wx._supply) wx._supply = supplyAir(wx);
     const wall = opt.wallDepth != null ? { depth: opt.wallDepth, glass: Math.max(0, opt.wallDepth - 0.1) } : WALL;
-    return { wx, use: u, useKey, occ: s.occ, pres: s.pres, rho, dinMask, BN: wx._bands, wall, dims: opt.dims || null, coolSet: opt.coolSet || 26, coolHi: opt.coolHi ? Float32Array.from(opt.coolHi) : null, coolHiFan: opt.coolHiFan ? Float32Array.from(opt.coolHiFan) : null, fanW: opt.fanW != null ? opt.fanW : null, gOcc: opt.gainOcc != null ? opt.gainOcc : null, blindCtl: opt.blindCtl || "auto", blinds: opt.blinds || null };
+    return { wx, use: u, useKey, occ: s.occ, pres: s.pres, rho, dinMask, BN: wx._bands, wall, dims: opt.dims || null, coolSet: opt.coolSet || 26, coolHi: opt.coolHi ? Float32Array.from(opt.coolHi) : null, coolHiFan: opt.coolHiFan ? Float32Array.from(opt.coolHiFan) : null, fanW: opt.fanW != null ? opt.fanW : null, gOcc: opt.gainOcc != null ? opt.gainOcc : null, blindCtl: opt.blindCtl || "auto", blindRule: opt.blindRule === "din" ? "din" : "comfort", blinds: opt.blinds || null };
   }
   // ground temperature at about 2 m: annual mean plus a damped, delayed 30-day mean (used only by the earth-tempered
   // supply, which is set aside; not part of any run)
@@ -1634,13 +1635,15 @@ const ENGINE = { solOnWindows: false, skySplit: true };
     const tau = ov && ov.tau != null ? ov.tau : sh.tau; // light through a lowered blind: a share straight through, the rest diffuse
     return { key, label: sh.label, fc: ov && ov.fc != null ? ov.fc : sh.fc[col], dR: sh.dR, tau, tauDir: tau * (sh.direct || 0), tauDif: tau * (1 - (sh.direct || 0)), outside: !!sh.outside };
   }
-  /* window openings for ventilation (v16 phase 2): per window of the room, the openable sash area (half the window area,
-     frame included) and the sash height; effective area for tilt (C_k at 10°) or fully open side-hung windows */
-  const HOLD = RV("run.blind.heatHold"), VM = RV("vent.method"), V_SHARE = RV("vent.openShare"), V_CK = RV("vent.tilt").ck;
+  /* window openings for ventilation: per window of the room, the openable sash and its height; effective area for tilt
+     (C_k at 10°) or fully open side-hung windows. v16 phase 3.5 (decision of 27 November 2026): a standard sash of
+     0.6 x 1.5 m per 2.7 m of facade, scaled by the facade width, or the window where smaller; height 1.5 m or the window
+     height where lower. Before: half the window area, so a larger window meant a larger opening. */
+  const HOLD = RV("run.blind.heatHold"), VM = RV("vent.method"), V_SASH = RV("vent.sash"), V_CK = RV("vent.tilt").ck, BCOM = RV("run.blind.comfort");
   function openings(ctx, c) {
     const dims = c.dims || ctx.dims || ctx.use.dims, W = dims[0], D = dims[1], H = dims[2];
     const walls = c.scenario === "cellular" ? [W] : [W, D];
-    return walls.map((L) => { const r = Z.windowRect(L, H, c.wwr, 0.3); return { sash: V_SHARE * c.wwr * L * H, h: r.z1 - r.z0 }; });
+    return walls.map((L) => { const r = Z.windowRect(L, H, c.wwr, 0.3), std = V_SASH.w * V_SASH.h * L / V_SASH.facade; return { sash: Math.min(std, c.wwr * L * H), h: Math.min(V_SASH.h, r.z1 - r.z0) }; });
   }
   /* embodied carbon of the elements the options change, per m² of floor, over the study period with replacements
      (v16 phase 3, register carbon.*). dims [W, D, H]; scenario "cellular" (one facade) or corner (two). */
@@ -1705,7 +1708,12 @@ const ENGINE = { solOnWindows: false, skySplit: true };
       /* blinds down when the sun on the window is above the DIN 4108-2 threshold of the use (8.4.2 j), both blind types. Design
          runs keep them up while the room air is at or below 23 °C (winter sun); the DIN check uses the threshold alone
          (decision of 17 November 2026). Blinds operated by hand stay up at weekends in non-residential use. */
-      if (shd.fc < 1 && !(hand && weekend) && (din || HOLD == null || tAir > HOLD) && !(ctx.blindHalf && ((i / 24) | 0) % 2)) for (let w = 0; w < wins.length; w++) if (irr[w][i] > wthr[w]) mask |= wins[w].bit;
+      /* v16 phase 3.5 (decision of 27 November 2026): comfort-driven control, the default. Blinds down when the operative
+         temperature of the previous hour is above 26 °C or the upper edge of the comfort band (ctx.coolHi), whichever is
+         lower, and the sun on the window is above 100 W/m², every orientation. The DIN 4108-2 check keeps the thresholds. */
+      if (!din && ctx.blindRule !== "din") { const tLim = ctx.coolHi ? Math.min(BCOM.tOp, ctx.coolHi[i]) : BCOM.tOp;
+        if (shd.fc < 1 && !(hand && weekend) && topPrev > tLim && !(ctx.blindHalf && ((i / 24) | 0) % 2)) for (let w = 0; w < wins.length; w++) if (irr[w][i] > BCOM.irr) mask |= wins[w].bit; }
+      else if (shd.fc < 1 && !(hand && weekend) && (din || HOLD == null || tAir > HOLD) && !(ctx.blindHalf && ((i / 24) | 0) % 2)) for (let w = 0; w < wins.length; w++) if (irr[w][i] > wthr[w]) mask |= wins[w].bit;
       const base = occ[i] ? achOcc : u.achUnocc;
       let want = base, isDay = false;
       /* window ventilation. DIN check (8.4.2 h, i): by day up to 3 1/h when the room air is above 23 °C and above the outdoor
@@ -2243,11 +2251,11 @@ const ENGINE = { solOnWindows: false, skySplit: true };
 let ctx=null,M0=null,ctxF=null,ctxP=null;
 /* v16 phase 3: scenario contexts. clim: the run's weather at the scenario's warming level (sent as wxF), comfort band and
    cooling limit recomputed on it; poor: half the blind hours (night ventilation is switched off in the design itself) */
-const mkF=()=>{const m=M0,w=m.wxF;Object.assign(w,Geo.solarPosition(w.lat,w.lon,w.tz));const c=Sweep.context(w,m.use,{dims:m.dims,wallDepth:m.wall,coolSet:m.coolSet,coolHi:m.coolHi,coolHiFan:m.coolHiFan,gainOcc:m.gainOcc,fanW:m.fanW,blindCtl:m.blindCtl,blinds:m.blinds});
+const mkF=()=>{const m=M0,w=m.wxF;Object.assign(w,Geo.solarPosition(w.lat,w.lon,w.tz));const c=Sweep.context(w,m.use,{dims:m.dims,wallDepth:m.wall,coolSet:m.coolSet,coolHi:m.coolHi,coolHiFan:m.coolHiFan,gainOcc:m.gainOcc,fanW:m.fanW,blindCtl:m.blindCtl,blindRule:m.blindRule,blinds:m.blinds});
  if(m.coolNa){c.coolHi=Float32Array.from(c.BN.B['na_'+m.coolNa].hi);c._coolArr=null;if(m.coolHiFan){const o=new Float32Array(8760);for(let i=0;i<8760;i++)o[i]=c.coolHi[i]+Comfort.FAN_DT>=25?c.coolHi[i]+Comfort.FAN_DT:c.coolHi[i];c.coolHiFan=o;}}return c;};
 const two=(c)=>({heat:Sweep.runCombo(ctx,c,'heat').heat,cool:Sweep.runCombo(ctx,c,'cool').cool});
 self.onmessage=(e)=>{const m=e.data;
- if(m.type==='init'){const wx=m.wx;Object.assign(wx,Geo.solarPosition(wx.lat,wx.lon,wx.tz));ctx=Sweep.context(wx,m.use,{dims:m.dims,wallDepth:m.wall,coolSet:m.coolSet,coolHi:m.coolHi,coolHiFan:m.coolHiFan,gainOcc:m.gainOcc,fanW:m.fanW,blindCtl:m.blindCtl,blinds:m.blinds});M0=m;ctxF=null;ctxP=null;postMessage({type:'ready'});}
+ if(m.type==='init'){const wx=m.wx;Object.assign(wx,Geo.solarPosition(wx.lat,wx.lon,wx.tz));ctx=Sweep.context(wx,m.use,{dims:m.dims,wallDepth:m.wall,coolSet:m.coolSet,coolHi:m.coolHi,coolHiFan:m.coolHiFan,gainOcc:m.gainOcc,fanW:m.fanW,blindCtl:m.blindCtl,blindRule:m.blindRule,blinds:m.blinds});M0=m;ctxF=null;ctxP=null;postMessage({type:'ready'});}
  else if(m.type==='run'){const out=m.tasks.map(t=>{let r;
    if(t.kind==='dl') r=DaySweep.job(ctx,t.job);
    else if(t.kind==='fac') r=FacadeSearch.search(ctx,Object.assign(t.o,{onProgress:(n)=>postMessage({type:'prog',id:t.id,n})}));

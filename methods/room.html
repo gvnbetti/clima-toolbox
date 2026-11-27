@@ -127,7 +127,7 @@ transfer through the building elements, ventilation and heating or cooling syste
 </tr>
 <tr>
 <td>Ventilation through windows</td>
-<td>Hourly airflow calculated using the EN 16798-7 single-sided ventilation method, based on effective opening area, sash height and indoor-outdoor temperature difference. Wind is not credited because site-specific wind conditions are unknown at concept stage. The method is therefore deliberately conservative. The openable sash is assumed to be half the window area.</td>
+<td>Hourly airflow calculated using the EN 16798-7 single-sided ventilation method, based on effective opening area, sash height and indoor-outdoor temperature difference. Wind is not credited because site-specific wind conditions are unknown at concept stage. The method is therefore deliberately conservative. The openable area is a standard sash of 0.6 × 1.5 m for a facade 2.7 m wide, scaled by the facade width (1.35 m² for a 4.05 m room), or the window itself where it is smaller; the opening height is 1.5 m, or the window height where lower. The same sash serves tilt windows (17% of it free at 10°) and fully opened windows, by day and at night. It does not grow with the window, since a large glazed facade is subdivided and only part of it opens.</td>
 <td>EN 16798-7 (CEN, 2017)</td>
 </tr>
 <tr>
@@ -142,8 +142,8 @@ transfer through the building elements, ventilation and heating or cooling syste
 </tr>
 <tr>
 <td>Blinds</td>
-<td>Exterior and interior blinds are lowered whenever solar radiation on the window exceeds the threshold in DIN 4108-2, clause 8.4.2 j. Solar reduction factors (F_C) follow Table 7. The same operating hours are used in the daylight calculation.</td>
-<td>DIN 4108-2, Table 7 (DIN, 2013)</td>
+<td>Two controls, chosen in the inputs. Comfort-driven (the default): exterior and interior blinds are lowered when the operative temperature of the room in the previous hour is above 26 °C, or above the upper edge of the comfort band where that is lower, and solar radiation on the window exceeds 100 W/m², on every orientation. Operative temperature is used because the adaptive limits are stated in it. DIN 4108-2: blinds are lowered when solar radiation on the window exceeds the threshold of clause 8.4.2 j, once the room air is above 23 °C. The DIN 4108-2 check always uses the standard's thresholds. Solar reduction factors (F_C) follow Table 7. The same operating hours are used in the daylight calculation.</td>
+<td>DIN 4108-2, Table 7 (DIN, 2013); EN 16798-1 (CEN, 2019); ASHRAE 55 (ASHRAE, 2020b)</td>
 </tr>
 <tr>
 <td>Ceiling fans and chilled ceilings</td>
