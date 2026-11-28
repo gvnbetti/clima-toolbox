@@ -140,18 +140,29 @@ self.onmessage=(e)=>{const m=e.data;
     if (!facTotal()) { setStatus("Choose at least one facade and one room type (corner rooms need two facades 90° apart)."); return; }
     if (!st.types.includes(st.scen) || !facList(st.scen).length) st.scen = st.types.find((sc) => facList(sc).length) || st.types[0];
     stopWorkers(); $("empty").hidden = true; $("results").hidden = false; setStale(false);
+    st.runIn = snapIn(); st.runWx = st.wx; st.loaded = null; $("loadnote").hidden = true;
     st.modsRun = { level: st.mods.level, uhi: st.mods.uhi ? Object.assign({}, st.mods.uhi) : null }; modBand();
     st.gen++; const gen = st.gen;
     st.dl = { cellular: {}, corner: {} }; st.fac = FAC(); st.prog = FAC(); st.build = {};
     AI.review = null; AI.chat = []; if (typeof renderReview === "function") { renderReview(); renderChat(); }
     st.coolClimate = null; if (st.wAuto) { st.w = EQW.slice(); st.wAuto = false; } st.zoom = {}; st.wwrFine = []; st.wwrBy = {}; st.refine = null; st.runDl = runKey4(); st.topping = null; st.wi = null; st.balCache = {}; st.fmap = {}; fmPending.clear(); st.evals = 0; st.dlDone = 0; st.running = true; st.mainRun = true; st.sel = null; st.rate = null; st.autoT = st.autoU = null; st.cache = {};
     st.scenR = {}; scenPending.clear(); st.scenLv = scenLevel(); st.tm = {}; st.nDin = 0; st.nScen = 0;
-    const eng = forEngine(st.wx);
-    st.ctxWx = Object.assign({}, eng, G.solarPosition(eng.lat, eng.lon, eng.tz));
-    st.ctx = S.context(st.ctxWx, st.use, { dims: st.dims, wallDepth: st.wall, coolSet: st.coolSet, gainOcc: gainNow(), fanW: st.fanW, blindCtl: st.blindCtl, blindRule: st.blindRule, blinds: JSON.parse(JSON.stringify(st.blinds)) }); st.gainRun = gainNow(); st.fanWRun = st.fanW; st.blindCtlRun = st.blindCtl; st.blindRuleRun = st.blindRule; st.blindsRun = JSON.parse(JSON.stringify(st.blinds)); st.dinC = {}; dinPending.clear(); st.ctx.coolHi = coolHiNow(st.ctx); st.ctx.coolHiFan = coolHiFanNow(st.ctx, st.ctx.coolHi); st.coolKeyRun = coolKeyNow();
+    const eng = setupCtx();
     // v16 phase 3.2: daylight only for the room types and orientations of the run
     for (const sc of DLSC.filter((d) => st.types.some((t) => dlScen(t) === d))) for (const w of S.PARAMS.wwr) for (const f of S.PARAMS.fixed) queue.push({ kind: "dl", id: [sc, w + "|" + f], job: { scenario: sc, wwr: w, fixed: f, azs: azsOf(sc) } });
     st.dlTotal = queue.length; st.facQueued = false;
+    spawn(gen, eng, () => startRun());
+    t0 = performance.now(); scheduleRender(true);
+  }
+  // the engine context of a run (also rebuilt for a loaded run)
+  function setupCtx() {
+    const eng = forEngine(st.wx);
+    st.ctxWx = Object.assign({}, eng, G.solarPosition(eng.lat, eng.lon, eng.tz));
+    st.ctx = S.context(st.ctxWx, st.use, { dims: st.dims, wallDepth: st.wall, coolSet: st.coolSet, gainOcc: gainNow(), fanW: st.fanW, blindCtl: st.blindCtl, blindRule: st.blindRule, blinds: JSON.parse(JSON.stringify(st.blinds)) }); st.gainRun = gainNow(); st.fanWRun = st.fanW; st.blindCtlRun = st.blindCtl; st.blindRuleRun = st.blindRule; st.blindsRun = JSON.parse(JSON.stringify(st.blinds)); st.dinC = {}; dinPending.clear(); st.ctx.coolHi = coolHiNow(st.ctx); st.ctx.coolHiFan = coolHiFanNow(st.ctx, st.ctx.coolHi); st.coolKeyRun = coolKeyNow();
+    return eng;
+  }
+  // the calculation workers of a run; a loaded run gets them too, idle, for the checks computed on demand
+  function spawn(gen, eng, onFail) {
     for (let k = 0; k < (st.wmode === "inline" ? 1 : NW); k++) {
       const w = makeWorker();
       w.onmessage = (e) => {
@@ -175,11 +186,10 @@ self.onmessage=(e)=>{const m=e.data;
         if (st.refine && st.refine.phase === "dl" && st.dlDone >= st.dlTotal) refineSearch();
         feed(w);
       };
-      w.onerror = (e) => { if (!w.ready && st.wmode === "file") { st.wmode = "inline"; startRun(); return; } setStatus("A calculation failed: " + e.message); };
+      w.onerror = (e) => { if (!w.ready && st.wmode === "file") { st.wmode = "inline"; onFail(); return; } setStatus("A calculation failed: " + e.message); };
       w.postMessage({ type: "init", wx: eng, use: st.use, dims: st.dims, wall: st.wall, coolSet: st.coolSet, coolHi: Array.from(st.ctx.coolHi), coolHiFan: st.ctx.coolHiFan ? Array.from(st.ctx.coolHiFan) : null, gainOcc: st.gainRun, fanW: st.fanWRun, blindCtl: st.blindCtlRun, blindRule: st.blindRuleRun, blinds: st.blindsRun, wxF: st.scenLv ? forEngineAt(st.scenLv) : null, coolNa: st.model === "na" ? st.cat.na : null });
       workers.push(w);
     }
-    t0 = performance.now(); scheduleRender(true);
   }
   let t0 = 0;
   function feed(w) {
@@ -523,6 +533,7 @@ self.onmessage=(e)=>{const m=e.data;
   // ------------------------------------------------------------ render
   function setStatus(t) { $("status").textContent = t; }
   function renderAll() {
+    slButtons();
     const units = st.dlTotal * 6 + facTotal() * PEREST;
     let evals = 0, prog = 0; if (st.prog) for (const sc of S.SCENARIOS) st.prog[sc].forEach((n, a) => { evals += n || 0; prog += st.fac && st.fac[sc][a] && st.fac[sc][a].done ? PEREST : Math.min(n || 0, 0.95 * PEREST); });
     $("bar").style.width = (st.fac && st.tm ? 100 * runState().frac : 100 * Math.min(1, (st.dlDone * 6 + prog) / Math.max(1, units))).toFixed(1) + "%";
@@ -1682,6 +1693,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
   const reread = () => { if (st.fac) renderAll(); };
   // v16: parameter register and version notes, written into Method and limits from the register itself
   const CHANGES = [
+    ["0.11.0", "28 Nov 2026", "Save results and Load results under Run. The file (a zip holding results.json) keeps the inputs of the run, the weather file and every result, so a loaded run shows at once, without simulating again. A file from another release is shown as saved, with a note to run again. The Claude review and chat are not saved."],
     ["0.10.0", "27 Nov 2026", "Blind control in the inputs: comfort-driven (default everywhere) or the DIN 4108-2 thresholds. Comfort-driven blinds come down when the room's operative temperature is above 26 °C or the upper edge of the comfort band, whichever is lower, and the sun on the window is above 100 W/m², on every orientation; before, north windows hardly ever got their blinds down. Window openings: a standard sash of 0.6 × 1.5 m per 2.7 m of facade, scaled by the facade width (or the window, where smaller), for tilt and fully open windows, by day and at night; before, half the window area, so larger windows ventilated more and won on overheating. The DIN 4108-2 check is unchanged. The EnergyPlus comparison is still to be rerun with these rules."],
     ["0.9.0 (Room Clima v17)", "21 Nov 2026", "First Clima Toolbox release; from here one release number for all apps. Shared calculation core with Macro and Micro Clima (sun, sun on surfaces, psychrometrics; daylight sun from the core). Layout: only the progress while a run is on; then targets in one line, what matters most, room type, room cards with a tick or cross per target, the +2 °C and poor-operation checks and carbon; the selected facade with three designs (recommended, lowest carbon, most daylight) and the other packages as More options, each named by what it changes and what that does, numbers on hover; the switches grouped by this room and whole building; cooling folded under the design; recommendations as short cards with the details under Why?; the rest folded. A design is always shown, with a notice when none meets every target. Light theme only."],
     ["v16, phase 3.4", "19 Nov 2026", "Progress: a panel at the top of the results while a run is on, with the share done, time so far and time left (from the measured time per daylight variant, per design and per check, over the workers), counts per stage (daylight variants, designs simulated, DIN checks and scenario runs) and a small bar per facade; the finer window sizes in 5% steps have their own block. The status line under Run gives the same in short."],
@@ -1746,6 +1758,112 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
   function blindThr() { const t = S.SHADE_IRR[st.use], bc = Register.val("run.blind.comfort");
     if (st.blindRule !== "din") { $("blindthr").textContent = `Comfort-driven: blinds come down when the room's operative temperature is above ${bc.tOp} °C or the upper edge of the comfort band, whichever is lower, and the sun on the window is above ${bc.irr} W/m², on every orientation. The DIN 4108-2 check uses the standard's thresholds (${t[1]} W/m², ${t[0]} W/m² facing north). Daylight uses the same blind hours as the design runs.`; return; }
     $("blindthr").textContent = `Blinds come down when the sun on the window exceeds ${t[1]} W/m² (${t[0]} W/m² on north, north-east and north-west facades), as DIN 4108-2, 8.4.2 j, for ${st.use === "dwelling" ? "dwellings" : "offices and schools"}, and the room air is above 23 °C, so winter sun is kept. The DIN 4108-2 check uses the thresholds alone. Daylight uses the same rule.`; }
+  // ---- 0.11.0: save and load results (decision of 28 November 2026)
+  /* One zip file holding results.json: the release, the date, the weather file as loaded, the inputs as they were at
+     Run and every result of the run with the reading choices. Caches, the engine context and the Claude review and chat
+     are left out; the context is rebuilt on loading, the caches as the results are drawn. */
+  let oriNoteFn = null;
+  const SL_SKIP = new Set(["wxList", "wx", "ctx", "ctxWx", "cache", "pcache", "prCache", "balCache", "modCache", "running", "gen", "wmode", "hover", "stale", "runIn", "runWx", "loaded", "detRun", "bgen"]);
+  // the inputs that change the calculation, kept as they were at Run (saved in their place when the inputs changed since)
+  const SL_IN = ["wxIdx", "use", "region", "model", "modelManual", "cat", "fans", "naFan", "dims", "wall", "coolSet", "fanW", "blindCtl", "blindRule", "blinds", "mods", "uhiLast", "copH", "copC", "limit", "ori", "types", "allow", "mode", "refineWin", "dlm", "floor"];
+  const slPack = function (k, v) {
+    if (k === "byKey") return undefined;
+    if (typeof v === "number" && !Number.isFinite(v)) return { __n: String(v) };
+    if (v instanceof Map) return { __map: [...v] };
+    if (v instanceof Set) return { __set: [...v] };
+    if (ArrayBuffer.isView(v)) return { __ta: v.constructor.name, v: Array.from(v, (x) => (Number.isFinite(x) ? x : String(x))) };
+    return v;
+  };
+  const SL_TA = { Float64Array, Float32Array, Int32Array, Int16Array, Int8Array, Uint32Array, Uint16Array, Uint8Array };
+  const slRevive = (k, v) => {
+    if (!v || typeof v !== "object" || Array.isArray(v)) return v;
+    if (typeof v.__n === "string" && Object.keys(v).length === 1) return Number(v.__n);
+    if (v.__map) return new Map(v.__map);
+    if (v.__set) return new Set(v.__set);
+    if (typeof v.__ta === "string" && Array.isArray(v.v)) { const C = SL_TA[v.__ta]; return C ? C.from(v.v, Number) : v.v; }
+    return v;
+  };
+  const slCopy = (o) => JSON.parse(JSON.stringify(o, slPack), slRevive);
+  const snapIn = () => { const o = {}; SL_IN.forEach((k) => { if (k in st) o[k] = st[k]; }); return slCopy(o); };
+  const release = () => { const e = document.querySelector(".tbver"); return e ? e.textContent.replace(/\s*beta\s*$/i, "").trim() : ""; };
+  const slBusy = () => st.running || queue.length > 0 || workers.some((w) => !w.idle);
+  function slButtons() { const b = $("savres"); if (b && b.textContent === "Save results") b.disabled = !st.fac || slBusy(); }
+  async function saveResults() {
+    const pick = {}; for (const k in st) if (!SL_SKIP.has(k)) pick[k] = st[k];
+    const changed = st.stale && st.runIn; if (changed) Object.assign(pick, st.runIn);
+    const wx = changed && st.runWx ? st.runWx : st.wx, now = new Date();
+    const doc = { app: "Room Clima", format: 1, release: release(), saved: now.toISOString(), weather: wx, st: pick };
+    const z = new JSZip(); z.file("results.json", JSON.stringify(doc, slPack));
+    const blob = await z.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+    await saveFile(safeName(`RoomClima_${wx.name}_${st.use}_${doc.saved.slice(0, 10)}_results`) + ".zip", blob);
+    return changed;
+  }
+  function askInline(text) {
+    return new Promise((res) => {
+      const b = $("slask"); b.querySelector("span").textContent = text; b.hidden = false;
+      b.querySelector('[data-a="yes"]').onclick = () => { b.hidden = true; res(true); };
+      b.querySelector('[data-a="no"]').onclick = () => { b.hidden = true; res(false); };
+    });
+  }
+  async function readResults(f) {
+    const head = new Uint8Array(await f.slice(0, 2).arrayBuffer());
+    if (head[0] === 0x50 && head[1] === 0x4b) {
+      const z = await JSZip.loadAsync(f), n = Object.keys(z.files).find((x) => /results\.json$/i.test(x)) || Object.keys(z.files).find((x) => /\.json$/i.test(x));
+      if (!n) throw new Error("This zip file holds no Room Clima results.");
+      return z.files[n].async("string");
+    }
+    return f.text();
+  }
+  async function loadResults(f) {
+    const err = $("loaderr"); err.textContent = "";
+    if (slBusy() && !(await askInline("A calculation is running. Stop it and load the file?"))) return;
+    let doc;
+    try { doc = JSON.parse(await readResults(f), slRevive); } catch (e) { err.textContent = "The file could not be read: " + e.message; return; }
+    if (!doc || doc.app !== "Room Clima" || !doc.st || !doc.weather || !doc.st.fac) { err.textContent = "This is not a Room Clima results file."; return; }
+    stopWorkers(); st.gen++; const gen = st.gen;
+    // the weather: a file already in the list is reused, otherwise the saved one is added
+    const W = doc.weather, same = (w) => w.name === W.name && w.t && W.t && w.t.length === W.t.length && [0, 1000, 4000, 8000].every((i) => w.t[i] === W.t[i]);
+    let wi = st.wxList.findIndex(same); if (wi < 0) { st.wxList.push(W); wi = st.wxList.length - 1; }
+    Object.assign(st, doc.st); st.wxIdx = wi; st.wx = st.wxList[wi];
+    for (const sc in st.fac) (st.fac[sc] || []).forEach((F) => { if (F && F.rows) F.byKey = new Map(F.rows.map((x) => [FS.keyOf(x.dz), x])); });
+    st.cache = {}; st.pcache = {}; st.prCache = {}; st.balCache = {}; st.modCache = null; st.detRun = null; st.stale = false;
+    fmPending.clear(); scenPending.clear(); dinPending.clear();
+    AI.review = null; AI.chat = []; if (typeof renderReview === "function") { renderReview(); renderChat(); }
+    const dinC = st.dinC, eng = setupCtx(); st.dinC = dinC;
+    st.runIn = snapIn(); st.runWx = st.wx; st.running = false; st.mainRun = false; st.facQueued = true;
+    const fail = () => { stopWorkers(); spawn(gen, eng, fail); };
+    spawn(gen, eng, fail);
+    t0 = performance.now() - 1000 * (st.elapsed || 0);
+    syncInputs(); setStale(false); $("empty").hidden = true; $("results").hidden = false;
+    const rel = doc.release || "an earlier release", cur = release(), when = new Date(doc.saved);
+    st.loaded = { name: f.name, release: rel, saved: doc.saved };
+    $("loadnote").textContent = `Loaded ${f.name}: a run saved on ${isNaN(when) ? "an unknown date" : when.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.` + (rel !== cur ? ` Saved with ${rel}; this is ${cur}. Run again to update.` : "");
+    $("loadnote").hidden = false;
+    scheduleRender(true);
+  }
+  // the input controls redrawn from the state (after loading a run)
+  function syncInputs() {
+    fillControls(); $("region").value = st.region; wxInfo(); regionInfo(); modsSync();
+    $("blindctl").value = st.blindCtl; $("blindrule").value = st.blindRule; blindThr();
+    [["fcext", "exterior", "fc"], ["tauext", "exterior", "tau"], ["fcint", "interior", "fc"], ["tauint", "interior", "tau"]].forEach(([id, k, f]) => { const v = st.blinds[k][f]; $(id).value = v == null ? "" : v; });
+    ["modeSeg|mode", "useSeg|use"].forEach((x) => { const [id, k] = x.split("|"); document.querySelectorAll(`#${id} button`).forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === String(st[k]))); });
+    $("dlm").value = st.dlm; $("floor").value = st.floor; $("dlnote").textContent = DLNOTE[st.dlm]; $("refwin").checked = !!st.refineWin;
+    document.querySelectorAll("#ori input").forEach((x) => { x.checked = st.ori.includes(+x.value); });
+    document.querySelectorAll("#types input").forEach((x) => { x.checked = st.types.includes(x.value); });
+    if (oriNoteFn) oriNoteFn(); fillStrategies();
+  }
+  function bindSaveLoad() {
+    const sb = $("savres");
+    sb.onclick = async () => {
+      $("loaderr").textContent = ""; sb.disabled = true; sb.textContent = "Saving the results";
+      try { const changed = await saveResults(); $("loaderr").textContent = changed ? "The inputs changed after the run; the file keeps the inputs of the run." : ""; }
+      catch (e) { $("loaderr").textContent = e && e.code === "declined" ? "Not saved." : "The results could not be saved: " + ((e && e.message) || e); }
+      sb.textContent = "Save results"; slButtons();
+    };
+    $("loadres").onclick = () => $("loadfile").click();
+    $("loadfile").onchange = (e) => { const f = e.target.files[0]; e.target.value = ""; if (f) loadResults(f); };
+    slButtons();
+  }
   function init() {
     fillRegister(); bindMods();
     st.wxList.forEach((w) => { w.region = regionFor(w); }); st.region = st.wx.region; locDefaults();
@@ -1787,7 +1905,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
     // building facades and room types (inputs: change what is simulated)
     $("ori").innerHTML = AZN.map((n, a) => `<label class="chk"><input type="checkbox" value="${a}"${st.ori.includes(a) ? " checked" : ""}> ${n}</label>`).join("");
     $("types").innerHTML = S.SCENARIOS.map((sc) => `<label class="chk"><input type="checkbox" value="${sc}"${st.types.includes(sc) ? " checked" : ""}> ${SCLAB[sc]}</label>`).join("");
-    const oriNote = () => { const n = facTotal(); $("orinote").textContent = `${n} facade${n === 1 ? "" : "s"} to search${st.types.includes("corner") || st.types.includes("corner_top") ? `; corner rooms at ${listJoin(facList("corner").map((a) => orientLabel("corner", a))) || "no pair of facades 90° apart"}` : ""}.${(st.types.includes("corner") || st.types.includes("corner_top")) && !facList("corner").length ? " A corner room faces two neighbouring directions, for example north and east: tick a facade at right angles to the ones chosen." : ""}`; };
+    const oriNote = oriNoteFn = () => { const n = facTotal(); $("orinote").textContent = `${n} facade${n === 1 ? "" : "s"} to search${st.types.includes("corner") || st.types.includes("corner_top") ? `; corner rooms at ${listJoin(facList("corner").map((a) => orientLabel("corner", a))) || "no pair of facades 90° apart"}` : ""}.${(st.types.includes("corner") || st.types.includes("corner_top")) && !facList("corner").length ? " A corner room faces two neighbouring directions, for example north and east: tick a facade at right angles to the ones chosen." : ""}`; };
     $("ori").onchange = () => { st.ori = [...document.querySelectorAll("#ori input:checked")].map((x) => +x.value); oriNote(); setStale(true); };
     $("types").onchange = () => { st.types = S.SCENARIOS.filter((sc) => document.querySelector(`#types input[value="${sc}"]`).checked); oriNote(); setStale(true); };
     oriNote();
@@ -1804,6 +1922,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
     dz.ondragleave = () => dz.classList.remove("over");
     dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove("over"); const f = e.dataTransfer.files[0]; if (f) loadFile(f); };
     $("run").onclick = () => startRun();
+    bindSaveLoad();
     bindAI();
     pcPointer();
     let rz = null; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (st.fac) renderAll(); }, 200); });
