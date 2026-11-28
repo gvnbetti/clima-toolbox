@@ -16,8 +16,8 @@ with sync_playwright() as p:
     while time.time() - t0 < 560:
         pg.wait_for_timeout(5000); s = pg.inner_text('#status')
         if s != last: last = s
-        if 'running' not in s.lower() and 'search' not in s.lower() and time.time() - t0 > 20 and pg.inner_text('#coolsum').strip(): break
-    pg.wait_for_timeout(45000); print('time', round(time.time() - t0), 's | status:', pg.inner_text('#status')[:200])
+        if 'running' not in s.lower() and 'search' not in s.lower() and time.time() - t0 > 20 and not pg.is_disabled('#savres'): break  # 0.12.0: the facade panel sits in its own tab
+    pg.wait_for_timeout(45000); pg.click('#rtabs button:nth-child(2)'); pg.wait_for_timeout(3000); print('time', round(time.time() - t0), 's | status:', pg.inner_text('#status')[:200])
     b_=pg.inner_text('body'); print('VERDICT:', pg.inner_text('#v5verd')[:2500]); bl=b_.lower(); print('PKG:', b_[bl.find('other packages at this facade'):][:1900]); print('DEC:', b_[bl.find('keep at every facade'):][:1800]); pg.screenshot(path='p3.png', full_page=True); pg.screenshot(path='p2.png', full_page=False); print('coolsum:', pg.inner_text('#coolsum')[:700])
     print('ERRORS', errs); b.close()
 srv.shutdown()

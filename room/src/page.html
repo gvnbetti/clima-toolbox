@@ -141,6 +141,7 @@ self.onmessage=(e)=>{const m=e.data;
     if (!st.types.includes(st.scen) || !facList(st.scen).length) st.scen = st.types.find((sc) => facList(sc).length) || st.types[0];
     stopWorkers(); $("empty").hidden = true; $("results").hidden = false; setStale(false);
     st.runIn = snapIn(); st.runWx = st.wx; st.loaded = null; $("loadnote").hidden = true;
+    st.locks = {}; st.kept = {}; st.lockS = {}; st.view = "ov"; st.swMode = "manual"; foldInputs(true);
     st.modsRun = { level: st.mods.level, uhi: st.mods.uhi ? Object.assign({}, st.mods.uhi) : null }; modBand();
     st.gen++; const gen = st.gen;
     st.dl = { cellular: {}, corner: {} }; st.fac = FAC(); st.prog = FAC(); st.build = {};
@@ -169,6 +170,7 @@ self.onmessage=(e)=>{const m=e.data;
         if (gen !== st.gen) return;
         const m = e.data;
         if (m.type === "ready") w.ready = true;
+        if (m.type === "prog" && m.id && m.id[2]) { const L = st.lockS && st.lockS[m.id[2]]; if (L) L.n = m.n; scheduleRender(false); return; }
         if (m.type === "prog") { const [sc, a] = m.id; if (m.k === "refine") { if (st.refine) (st.refine.prog = st.refine.prog || {})[sc + a] = m.n - ((st.refine.base || {})[sc + a] || 0); } else st.prog[sc][a] = m.n; scheduleRender(false); return; }
         if (m.type === "done") tmDone(w, m.out);
         if (m.type === "done") m.out.forEach((o) => {
@@ -176,7 +178,7 @@ self.onmessage=(e)=>{const m=e.data;
           else if (o.kind === "fac") facDone(o.id[0], o.id[1], o.r);
           else if (o.kind === "one") oneDone(o.id, o.r);
           else if (o.kind === "swap") { addRows(o.id[0], o.id[1], o.r.rows); scheduleRender(false); }
-          else if (o.kind === "topup") topDone(o.id[0], o.id[1], o.r);
+          else if (o.kind === "topup") { if (o.id[2]) lockDone(o.id[0], o.id[1], o.id[2], o.r); else topDone(o.id[0], o.id[1], o.r); }
           else if (o.kind === "refine") refineDone(o.id[0], o.id[1], o.r);
           else if (o.kind === "fmap") { st.fmap[o.id] = o.r; fmPending.delete(o.id); scheduleRender(false); }
           else if (o.kind === "din") { st.nDin++; st.dinC[o.id] = o.r; st.dinVer = (st.dinVer || 0) + 1; dinPending.delete(o.id); scheduleRender(false); }
@@ -546,6 +548,7 @@ self.onmessage=(e)=>{const m=e.data;
     if (st.mainRun && st.tm && !runState().busy) st.mainRun = false;
     document.body.classList.toggle("rc-running", !!st.mainRun);
     if (!st.fac) return;
+    renderShell();
     if (st.tm) { const rp = runPanelHtml(); $("runp").innerHTML = rp; $("runp").hidden = !rp; }
     if (!facList(st.scen).includes(st.fa)) st.fa = facList(st.scen)[0];
     $("notes").innerHTML = notesHtml(); readingLine();
@@ -1693,6 +1696,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
   const reread = () => { if (st.fac) renderAll(); };
   // v16: parameter register and version notes, written into Method and limits from the register itself
   const CHANGES = [
+    ["0.12.0", "28 Nov 2026", "Results in tabs: an Overview, one tab per room and facade, and Method and evidence. The inputs fold away after a run (Show inputs). One priority row at the top, Balanced, Daylight first, Comfort first or Energy first, sets the recommended design everywhere. The facade switches work in two ways: Manual changes, the default, changes one thing at a time; Suggest optimum fixes the choice you click and moves the other switches to the best design for that room alone, building-wide measures included, from the designs tested and a short search around your choices. Keep this design puts a design on the room's card in the Overview."],
     ["0.11.0", "28 Nov 2026", "Save results and Load results under Run. The file (a zip holding results.json) keeps the inputs of the run, the weather file and every result, so a loaded run shows at once, without simulating again. A file from another release is shown as saved, with a note to run again. The Claude review and chat are not saved."],
     ["0.10.0", "27 Nov 2026", "Blind control in the inputs: comfort-driven (default everywhere) or the DIN 4108-2 thresholds. Comfort-driven blinds come down when the room's operative temperature is above 26 °C or the upper edge of the comfort band, whichever is lower, and the sun on the window is above 100 W/m², on every orientation; before, north windows hardly ever got their blinds down. Window openings: a standard sash of 0.6 × 1.5 m per 2.7 m of facade, scaled by the facade width (or the window, where smaller), for tilt and fully open windows, by day and at night; before, half the window area, so larger windows ventilated more and won on overheating. The DIN 4108-2 check is unchanged. The EnergyPlus comparison is still to be rerun with these rules."],
     ["0.9.0 (Room Clima v17)", "21 Nov 2026", "First Clima Toolbox release; from here one release number for all apps. Shared calculation core with Macro and Micro Clima (sun, sun on surfaces, psychrometrics; daylight sun from the core). Layout: only the progress while a run is on; then targets in one line, what matters most, room type, room cards with a tick or cross per target, the +2 °C and poor-operation checks and carbon; the selected facade with three designs (recommended, lowest carbon, most daylight) and the other packages as More options, each named by what it changes and what that does, numbers on hover; the switches grouped by this room and whole building; cooling folded under the design; recommendations as short cards with the details under Why?; the rest folded. A design is always shown, with a notice when none meets every target. Light theme only."],
@@ -1758,6 +1762,107 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
   function blindThr() { const t = S.SHADE_IRR[st.use], bc = Register.val("run.blind.comfort");
     if (st.blindRule !== "din") { $("blindthr").textContent = `Comfort-driven: blinds come down when the room's operative temperature is above ${bc.tOp} °C or the upper edge of the comfort band, whichever is lower, and the sun on the window is above ${bc.irr} W/m², on every orientation. The DIN 4108-2 check uses the standard's thresholds (${t[1]} W/m², ${t[0]} W/m² facing north). Daylight uses the same blind hours as the design runs.`; return; }
     $("blindthr").textContent = `Blinds come down when the sun on the window exceeds ${t[1]} W/m² (${t[0]} W/m² on north, north-east and north-west facades), as DIN 4108-2, 8.4.2 j, for ${st.use === "dwelling" ? "dwellings" : "offices and schools"}, and the room air is above 23 °C, so winter sun is kept. The DIN 4108-2 check uses the thresholds alone. Daylight uses the same rule.`; }
+  // ---- 0.12.0: tabs, the priority on top, Manual changes and Suggest optimum (decisions of 28 November 2026)
+  const TABL = (sc, a) => `${SCLAB[sc].replace(/ room.*$/, "")}${sc === "corner_top" ? " top" : ""} ${orientLabel(sc, a)}`;
+  const prioName = () => { const x = PRESETS.find((q) => sameW(st.w, normW(q[2]))); return x ? x[1] : "your own priorities"; };
+  function foldInputs(on) { st.inFold = !!on; document.body.classList.toggle("infold", !!on); const b = $("ptin"); if (b) b.textContent = on ? "Show inputs" : "Hide inputs"; }
+  function renderShell() {
+    $("ptop").hidden = false;
+    const cur = PRESETS.find((x) => sameW(st.w, normW(x[2])));
+    $("ptseg").innerHTML = PRESETS.map(([k, lab, , sub]) => `<button type="button" data-k="${k}" aria-pressed="${!!cur && cur[0] === k}" title="${escA(sub)}">${lab}</button>`).join("");
+    document.querySelectorAll("#ptseg button").forEach((b) => b.onclick = () => { const x = PRESETS.find((q) => q[0] === b.dataset.k); st.w = normW(x[2]); st.wManual = true; st.wAuto = false; if (st.swMode !== "opt") st.wi = null; renderAll(); });
+    $("ptnote").textContent = `${cur ? cur[3] : "Your own weights from the triangle: " + wTxt()}. The recommended design in every tab and Suggest optimum follow this priority.`;
+    slButtons();
+    const tabs = [["ov", "Overview"]].concat(...st.types.map((sc) => facList(sc).map((a) => [sc + "|" + a, TABL(sc, a)])), [["m", "Method and evidence"]]);
+    if (!tabs.some((t) => t[0] === st.view)) st.view = "ov";
+    $("rtabs").innerHTML = tabs.map(([k, l]) => `<button type="button" data-v="${k}" aria-pressed="${k === st.view}"${k === "m" ? ' class="rtm"' : ""}>${esc(l)}</button>`).join("");
+    document.querySelectorAll("#rtabs button").forEach((b) => b.onclick = () => openView(b.dataset.v));
+    const room = st.view.includes("|");
+    if (room) { const [sc, a] = st.view.split("|"); st.scen = sc; st.fa = +a; }
+    document.body.dataset.view = room ? "room" : st.view;
+    if (st.view === "ov") { $("ovcards").innerHTML = ovCardsHtml(); document.querySelectorAll("#ovcards .fcard").forEach((b) => b.onclick = () => openView(b.closest(".ovt").dataset.sc + "|" + b.dataset.a)); }
+  }
+  function openView(v) {
+    if (v === st.view) return;
+    const [sc, a] = v.split("|"); if (a != null && !(st.wi && st.wi.sc === sc && st.wi.a === +a)) st.wi = null;
+    st.view = v; if (st.sel && st.sel.auto) st.sel = null; renderAll();
+    const t = $("rtabs"); if (t) window.scrollTo({ top: Math.max(0, t.getBoundingClientRect().top + window.scrollY - 10) });
+  }
+  function ovCardsHtml() {
+    return `<div class="v4h"><h2>Rooms</h2><span class="small">Each room with its recommended design under ${esc(prioName())}, or the design you kept for it. A card opens its tab.</span></div>`
+      + st.types.map((sc) => { const B = buildResult(sc), g = B ? glanceHtml(sc, B).replace(/^[\s\S]*?(<div class="g4">)/, "$1").replace(/class="fcard on"/g, 'class="fcard"').replace(/aria-pressed="true"/g, 'aria-pressed="false"') : `<p class="wait">${st.running || st.topping ? "Appears when the facades of this room type have been searched." : "No design found for this room type."}</p>`;
+        return `<div class="ovt" data-sc="${sc}"><h3 class="ovth">${SCLAB[sc]}</h3>${g}</div>`; }).join("");
+  }
+  function bindTop() {
+    $("ptin").onclick = () => foldInputs(!st.inFold);
+    $("ptsave").onclick = () => $("savres").click();
+    $("ptload").onclick = () => $("loadfile").click();
+    $("ptfine").onclick = (e) => { e.preventDefault(); if (st.view !== "ov") openView("ov"); const d = $("finedet"); if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ block: "start" }), 50); } };
+  }
+  // the choices fixed by the user in Suggest optimum, per room and facade, and the best design that keeps them
+  const lkKey = (sc, a) => sc + "|" + a;
+  const locksOf = (sc, a) => (st.locks && st.locks[lkKey(sc, a)]) || {};
+  const lockSig = (sc, a, L) => sc + "|" + a + "|" + Object.keys(L).sort().map((q) => q + "=" + L[q]).join(",");
+  const LOCKCAP = 300; // designs simulated at most in the search around the choices
+  function optRow(sc, a) { // the best design for this room alone: building-wide measures free, the user's choices kept
+    const L = locksOf(sc, a), ks = Object.keys(L), f = facade(sc, a); if (!f) return null;
+    const m = (r) => ks.every((q) => r.dz[q] === L[q]), all = f.rows.filter(m), ok = f.ok.filter(m), meet = ok.filter((r) => r.t && r.t.all);
+    const pool = meet.length ? meet : ok.length ? ok : all;
+    return pool.length ? pickTie(pool, (r) => r.q) : null;
+  }
+  function optSync(sc) {
+    if (st.swMode !== "opt" || !st.view || !st.view.includes("|")) return;
+    const a = st.fa, B = buildResult(sc), rec = B && B.best.per[a], o = optRow(sc, a);
+    st.wi = o && !(rec && FS.keyOf(o.dz) === FS.keyOf(rec.dz)) ? { sc, a, dz: Object.assign({}, o.dz), opt: true } : null;
+  }
+  function toggleLock(sc, a, p, v) { const L = Object.assign({}, locksOf(sc, a)); if (L[p] === v) delete L[p]; else L[p] = v; st.locks[lkKey(sc, a)] = L; lockSearch(sc, a); renderAll(); }
+  function lockSearch(sc, a) {
+    const L = locksOf(sc, a), ks = Object.keys(L); if (!ks.length || !workers.length || !st.fac[sc][a]) return;
+    const sig = lockSig(sc, a, L); st.lockS = st.lockS || {}; if (st.lockS[sig]) return;
+    const m = (x) => ks.every((q) => x.dz[q] === L[q]), S0 = st.lockS[sig] = { n: 0, done: false, t0: Date.now() };
+    const go = () => { const rows = st.fac[sc][a].rows.filter(m), lv = Object.assign({}, levelsFor(sc, a)); ks.forEach((q) => { lv[q] = [L[q]]; });
+      queue.push({ kind: "topup", id: [sc, a, sig], o: { scenario: sc, azimuth: S.PARAMS.azimuth[a], tab: dlTab(sc, a), key: evalKey(), fanOk: fanOkNow(), limit: limitNow(), copH: st.copH, copC: st.copC, rk: rankOpts(sc), mode: st.mode, dlm: st.dlm, floor: st.floor, levels: lv, meas: VARM(sc).filter((q) => !(q in L)), cap: LOCKCAP, rows: rows.map((x) => ({ dz: x.dz, heat: x.r.heat, cool: x.r.cool })) } }); wake(); };
+    if (st.fac[sc][a].rows.some(m)) { go(); return; }
+    // nothing tested with these choices yet: the best design so far with the choices applied, then the search from there
+    const o = optRow(sc, a) || facade(sc, a).best || (buildResult(sc) || { best: { per: {} } }).best.per[a]; if (!o) { S0.done = true; S0.fail = true; return; }
+    simulateOne(sc, a, Object.assign({}, o.dz, L)).then(go, () => { S0.done = true; S0.fail = true; scheduleRender(true); });
+  }
+  function lockDone(sc, a, sig, r) { addRows(sc, a, r.rows); const s = st.lockS && st.lockS[sig]; if (s) { s.done = true; s.n = r.rows.length; s.t = Math.round((Date.now() - s.t0) / 1000); } scheduleRender(true); }
+  const keptRow = (sc, a) => { const d = st.kept && st.kept[lkKey(sc, a)]; return d ? wiRow(sc, a, d) : null; };
+  function swHead(sc, a, wi) {
+    if (st.swMode === "opt") return wi ? `The best design for this room alone under ${esc(prioName())}${Object.keys(locksOf(sc, a)).length ? ", with your choices" : ""}. The recommended design keeps one glass, insulation and mass for the whole building; the differences against it are shown.` : `For this room the recommended design is also the best.`;
+    return wi ? "Your changes are marked; the differences against the recommended design are shown." : `The recommended design under ${esc(prioName())}. Change a switch to see its effect, one at a time.`;
+  }
+  function modeBarHtml(sc, a) {
+    const opt = st.swMode === "opt", L = locksOf(sc, a), ks = Object.keys(L);
+    let h = `<div class="swmode" role="group" aria-label="How the switches work"><button type="button" data-m="manual" aria-pressed="${!opt}"><b>Manual changes</b><span>Set the switches as you wish</span></button><button type="button" data-m="opt" aria-pressed="${opt}"><b>Suggest optimum</b><span>One change, the rest set to the best combination</span></button></div>`;
+    if (!opt) return h;
+    const s = ks.length && st.lockS ? st.lockS[lockSig(sc, a, L)] : null, f = facade(sc, a), n = f ? f.rows.length : 0;
+    const stat = !ks.length ? `Click a choice to fix it. The other switches move to the best design for this room under ${esc(prioName())}.`
+      : !s ? "" : s.fail ? "The search around your choices could not run; the design shown is the best among those already tested."
+      : s.done ? `Best design with your choices among ${fmt(n)} designs tested at this facade, ${fmt(s.n)} of them in a search around your choices${s.t != null ? ` (${s.t} s)` : ""}.`
+      : `Searching around your choices: ${fmt(s.n || 0)} designs so far. The design shown is the best found yet.`;
+    h += `<div class="lkbar"><b>Your choices</b>${ks.length ? ks.map((q) => `<span class="lkc">${NAME4[q]}: ${esc(SHORT4[q](L[q]))} <button type="button" data-p="${q}" aria-label="Remove ${escA(NAME4[q])}">✕</button></span>`).join("") + `<button type="button" class="link" id="lkclear">Clear my choices</button>` : `<span class="small">none yet</span>`}<span class="small lkst">${stat}</span></div>`;
+    return h;
+  }
+  function swCls(sc, a, p, v, on, isRec) { const c = on ? (isRec ? "on" : "wi") : ""; if (st.swMode !== "opt") return c; return locksOf(sc, a)[p] === v ? (c + " lk").trim() : on && !isRec ? c + " byopt" : c; }
+  function swTag(sc, a, p, v, on, isRec) { if (st.swMode !== "opt") return ""; if (locksOf(sc, a)[p] === v) return `<span class="swt">your choice</span>`; return on && !isRec ? `<span class="swt">set by optimum</span>` : ""; }
+  function keepHtml(sc, a, wi, cur) {
+    const kd = st.kept && st.kept[lkKey(sc, a)], B = buildResult(sc), rec = B && B.best.per[a], dz = wi ? wi.dz : rec && rec.dz;
+    if (kd && dz && FS.keyOf(kd) === FS.keyOf(dz)) return `<p class="keepl">Kept: this design replaces the recommended one on the ${esc(TABL(sc, a))} card in the Overview. <button type="button" class="link" id="keeprm">Remove</button></p>`;
+    let h = wi && cur ? `<button type="button" class="ghost keepb" id="keepdz">Keep this design for ${esc(TABL(sc, a))}</button>` : "";
+    if (kd) h += `<p class="keepl">You kept another design for ${esc(TABL(sc, a))}${wi && cur ? "; keeping this one replaces it" : ""}. <button type="button" class="link" id="keeprm">Remove it</button></p>`;
+    return h;
+  }
+  function bindModeBar(sc, a) {
+    document.querySelectorAll("#v4fac .swmode button").forEach((b) => b.onclick = () => { const m = b.dataset.m; if (m === st.swMode) return;
+      if (m === "manual" && st.wi && st.wi.opt) st.wi = Object.assign({}, st.wi, { opt: false }); // the optimum becomes the start of manual changes
+      st.swMode = m; if (m === "opt") lockSearch(sc, a); renderAll(); });
+    document.querySelectorAll("#v4fac .lkc button").forEach((b) => b.onclick = () => { const L = Object.assign({}, locksOf(sc, a)); delete L[b.dataset.p]; st.locks[lkKey(sc, a)] = L; lockSearch(sc, a); renderAll(); });
+    const c = $("lkclear"); if (c) c.onclick = () => { st.locks[lkKey(sc, a)] = {}; renderAll(); };
+    const k = $("keepdz"); if (k) k.onclick = () => { const wi = st.wi && st.wi.sc === sc && st.wi.a === a ? st.wi : null; if (!wi) return; st.kept[lkKey(sc, a)] = Object.assign({}, wi.dz); renderAll(); };
+    const r = $("keeprm"); if (r) r.onclick = () => { delete st.kept[lkKey(sc, a)]; renderAll(); };
+  }
   // ---- 0.11.0: save and load results (decision of 28 November 2026)
   /* One zip file holding results.json: the release, the date, the weather file as loaded, the inputs as they were at
      Run and every result of the run with the reading choices. Caches, the engine context and the Claude review and chat
@@ -1787,7 +1892,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
   const snapIn = () => { const o = {}; SL_IN.forEach((k) => { if (k in st) o[k] = st[k]; }); return slCopy(o); };
   const release = () => { const e = document.querySelector(".tbver"); return e ? e.textContent.replace(/\s*beta\s*$/i, "").trim() : ""; };
   const slBusy = () => st.running || queue.length > 0 || workers.some((w) => !w.idle);
-  function slButtons() { const b = $("savres"); if (b && b.textContent === "Save results") b.disabled = !st.fac || slBusy(); }
+  function slButtons() { const b = $("savres"); if (b && b.textContent === "Save results") b.disabled = !st.fac || slBusy(); const q = $("ptsave"); if (q && b) q.disabled = b.disabled; }
   async function saveResults() {
     const pick = {}; for (const k in st) if (!SL_SKIP.has(k)) pick[k] = st[k];
     const changed = st.stale && st.runIn; if (changed) Object.assign(pick, st.runIn);
@@ -1827,6 +1932,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
     Object.assign(st, doc.st); st.wxIdx = wi; st.wx = st.wxList[wi];
     for (const sc in st.fac) (st.fac[sc] || []).forEach((F) => { if (F && F.rows) F.byKey = new Map(F.rows.map((x) => [FS.keyOf(x.dz), x])); });
     st.cache = {}; st.pcache = {}; st.prCache = {}; st.balCache = {}; st.modCache = null; st.detRun = null; st.stale = false;
+    st.locks = st.locks || {}; st.kept = st.kept || {}; st.lockS = st.lockS || {}; Object.keys(st.lockS).forEach((k) => { if (!st.lockS[k].done) delete st.lockS[k]; }); st.view = st.view || "ov"; st.swMode = st.swMode || "manual"; foldInputs(true);
     fmPending.clear(); scenPending.clear(); dinPending.clear();
     AI.review = null; AI.chat = []; if (typeof renderReview === "function") { renderReview(); renderChat(); }
     const dinC = st.dinC, eng = setupCtx(); st.dinC = dinC;
@@ -1922,7 +2028,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
     dz.ondragleave = () => dz.classList.remove("over");
     dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove("over"); const f = e.dataTransfer.files[0]; if (f) loadFile(f); };
     $("run").onclick = () => startRun();
-    bindSaveLoad();
+    bindSaveLoad(); bindTop();
     bindAI();
     pcPointer();
     let rz = null; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (st.fac) renderAll(); }, 200); });
@@ -2140,6 +2246,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
   // ---- render
   function renderV4() {
     const sc = st.scen, B = buildResult(sc), A = facList(sc);
+    optSync(sc);
     $("v4prio").innerHTML = ""; // v17: no priority buttons; Recommended is the balanced design
     if (!B) { $("v4tiles").innerHTML = ""; $("v4glance").innerHTML = `<p class="wait">${st.running || st.topping ? "The design appears when the facades of this room type have been searched." : "No combination of the facades scores above 0. Check the required daylight minimum and the comfort limit under Reading."}</p>`; $("v4dec").innerHTML = ""; $("v4fac").innerHTML = ""; $("v5verd").innerHTML = ""; $("v5cool").innerHTML = ""; $("coolsum").innerHTML = ""; return; }
     if (!A.includes(st.fa)) st.fa = A[0];
@@ -2200,12 +2307,12 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
     // compact selector: one card per room, in the order of the facades, a small 3D view and the three results
     const A = B.A;
     const cards = A.map((a) => {
-      const r = B.best.per[a], fm = fmapOf(sc, r.dz, a), on = a === st.fa;
+      const kr = keptRow(sc, a), r = kr || B.best.per[a], fm = fmapOf(sc, r.dz, a), on = a === st.fa;
       const svg = fm ? room3d(fm, S.PARAMS.azimuth[a], { psi: S.PARAMS.azimuth[a] + 35, th: 30 }) : `<span class="c3wait">Drawing…</span>`;
       const v = coolVerdict(r, sc, a).v;
       const din = dinRule() ? (() => { const c = dinComply(sc, a, r, true); return c.exact ? `<span class="dinl${c.ok ? "" : " bad"}">DIN ${c.ok ? "✓" : "✗"} ${fmt(Math.round(c.kh))}/${fmt(dinLim())}</span>` : `<span class="dinl">DIN …</span>`; })() : "";
       return `<button type="button" class="fcard${on ? " on" : ""}" data-a="${a}" aria-pressed="${on}" title="${chips4(sc, r.dz).join(", ")}">
-        <span class="fch"><b>${orientLabel(sc, a)}</b><span>${Math.round(r.dz.wwr * 100)}% window</span></span>
+        <span class="fch"><b>${orientLabel(sc, a)}</b><span>${kr ? "your design · " : ""}${Math.round(r.dz.wwr * 100)}% window</span></span>
         <span class="c3wrap">${svg}</span>
         <span class="fcv"><span class="cvd ${v}">${VSHORT[v]}</span>${din}</span>
         <span class="fm"><span>Daylight<b>${tk(r.t.A1 && r.t.S)} ${dlVal(r.m.S)}</b></span><span>Comfort<b>${tk(r.t.C)} ${fmt(Math.round(r.m.C))}</b><small>K·h/a</small></span><span>Energy<b>${tk(r.t.E)} ${fmt(r.m.E)}</b><small>${UE}</small></span></span>
@@ -2293,6 +2400,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
   function designSet(sc, a, rec) {
     const out = [["rec", "Recommended", rec, "the recommended design", 0]], seen = new Set([FS.keyOf(rec.dz)]);
     const add = (id, lab, r, note, row) => { if (!r) return; const k = FS.keyOf(r.dz); if (seen.has(k)) return; seen.add(k); out.push([id, lab, r, note, row]); };
+    { const kr = keptRow(sc, a); if (kr) add("kept", "Kept design", kr, "the design you kept for this room", 0); }
     // the best design on one measure among those that meet every target (ties: the better balanced one)
     const f = facade(sc, a), ok = (f ? f.ok : []).filter((r) => r.t && r.t.all);
     const bestOn = (val) => ok.length ? ok.reduce((b, r) => (val(r) < val(b) - 1e-9 || (Math.abs(val(r) - val(b)) <= 1e-9 && r.q > b.q) ? r : b), ok[0]) : null;
@@ -2347,18 +2455,18 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
     const F = st.fac[sc][a], vNow = cur ? coolVerdict(cur, sc, a).v : null;
     const flipTag = (p, v) => { if (!vNow || vNow === "wait" || v === dz[p] || !F) return ""; const x = F.byKey.get(FS.keyOf(Object.assign({}, dz, { [p]: v }))); if (!x) return "";
       const v2 = coolVerdict({ dz: x.dz, r: x.r }, sc, a).v; if (v2 === "wait" || v2 === vNow) return ""; return `<span class="flip${RANKV[v2] < RANKV[vNow] ? " gd" : ""}">${{ none: "no cooling needed", ceil: "needs a chilled ceiling", sys: "needs air conditioning" }[v2] || VSHORT[v2]}</span>`; };
-    let h = `<div class="v4h"><h2>${orientFull(sc, a)} ${sc === "cellular" ? "facade" : "facades"}, ${SCLAB[sc].toLowerCase()}</h2><span class="small">${wi ? "What if: your changes are in blue." : "The recommended design: daylight, comfort and energy weighed equally. Pick other choices to see their effect."} A label under a choice shows where it changes the cooling result.</span></div>${cur && cur.t && !cur.t.all ? `<p class="missnote"><b>No design found meets every target here.</b> Shown: the one that comes closest. ${cap(missTxt(cur))}. Change the targets under Reading, or allow more strategies in the inputs.</p>` : ""}${B.mixed ? `<p class="missnote">No single choice of glass, insulation and mass was found that suits every facade of this room type; each facade shows its own best design.</p>` : ""}<div class="fpg">`;
+    let h = `<div class="v4h"><h2>${orientFull(sc, a)} ${sc === "cellular" ? "facade" : "facades"}, ${SCLAB[sc].toLowerCase()}</h2><span class="small">${swHead(sc, a, wi)} A label under a choice shows where it changes the cooling result.</span></div>${cur && cur.t && !cur.t.all ? `<p class="missnote"><b>No design found meets every target here.</b> Shown: the one that comes closest. ${cap(missTxt(cur))}. Change the targets under Reading, or allow more strategies in the inputs.</p>` : ""}${B.mixed ? `<p class="missnote">No single choice of glass, insulation and mass was found that suits every facade of this room type; each facade shows its own best design.</p>` : ""}${modeBarHtml(sc, a)}<div class="fpg">`;
     const DS4 = designSet(sc, a, rec), kNow = FS.keyOf(dz);
     const btn = ([id, lab, r, note]) => { const on = FS.keyOf(r.dz) === kNow;
       return `<button type="button" data-ds="${id}" aria-pressed="${on}" class="${on ? "on" : ""}${r.t && r.t.all ? "" : " miss"}" title="${escA(cap(note) + ". " + pkgNumbers(rec, r) + (r.t && r.t.all ? "." : ". Misses: " + missTxt(r) + "."))}"><b>${lab}</b><small>${pkgEffect(rec, r)}</small></button>`; };
     const main = DS4.filter((d) => !d[4]), more = DS4.filter((d) => d[4]);
-    h += `<div class="dsel" role="group" aria-label="Designs to compare at this facade">${main.map(btn).join("")}${DS4.some(([, , r]) => FS.keyOf(r.dz) === kNow) ? "" : `<button type="button" class="on wi" aria-pressed="true" disabled><b>Your design</b><small>changed by hand</small></button>`}</div>`;
-    if (more.length) h += `<details class="dmore" id="moredet"${st.moreOpen || more.some((d) => FS.keyOf(d[2].dz) === kNow) ? " open" : ""}><summary>More options <span class="small">${more.length} other designs, each also ${rec.t.all ? "meeting every target" : "about as close to the targets"}</span></summary><div class="dsel" role="group" aria-label="More designs at this facade">${more.map(btn).join("")}</div></details>`;
+    if (st.swMode !== "opt") h += `<div class="dsel" role="group" aria-label="Designs to compare at this facade">${main.map(btn).join("")}${DS4.some(([, , r]) => FS.keyOf(r.dz) === kNow) ? "" : `<button type="button" class="on wi" aria-pressed="true" disabled><b>Your design</b><small>changed by hand</small></button>`}</div>`;
+    if (more.length && st.swMode !== "opt") h += `<details class="dmore" id="moredet"${st.moreOpen || more.some((d) => FS.keyOf(d[2].dz) === kNow) ? " open" : ""}><summary>More options <span class="small">${more.length} other designs, each also ${rec.t.all ? "meeting every target" : "about as close to the targets"}</span></summary><div class="dsel" role="group" aria-label="More designs at this facade">${more.map(btn).join("")}</div></details>`;
     const measO = meas.filter((p) => !FS.SHARED.includes(p)).concat(meas.filter((p) => FS.SHARED.includes(p))), nOwn = meas.filter((p) => !FS.SHARED.includes(p)).length;
     h += `<div class="sw">${measO.map((p, iP) => (iP === 0 ? `<div class="swg">This room</div>` : iP === nOwn ? `<div class="swg">Whole building</div>` : "") + (() => { const L = LVa(p), it = core && core.items[p], k = it ? (it.tie ? 7 : it.k) : 7;
       return `<div class="swr"><div class="swh"><b>${NAME4[p]}</b><span class="small">${FS.SHARED.includes(p) ? "building-wide: every facade" : "this facade only"}${p === "wwr" && wwrRange(sc, a) ? `; ${rangeTxt(wwrRange(sc, a))} differ little` : ""}${(p === "dayAch" || p === "nightAch") && dz[p] ? `; ${openTxt(p, dz, sc)}` : ""}</span></div><div class="swo" role="group" aria-label="${NAME4[p]}">${L.map((v) => {
         const isRec = v === rec.dz[p], on = v === dz[p];
-        return `<button type="button" data-p="${p}" data-v="${typeof v === "number" ? "n" + v : v}" aria-pressed="${on}" class="${on ? (isRec ? "on" : "wi") : ""}" style="${isRec ? `box-shadow:0 0 0 ${k >= 5 ? 3 : 2}px ${GREEN(k)}` : ""}">${SHORT4[p](v)}${flipTag(p, v)}</button>`; }).join("")}</div></div>`; })()).join("")}</div>`;
+        return `<button type="button" data-p="${p}" data-v="${typeof v === "number" ? "n" + v : v}" aria-pressed="${on}" class="${swCls(sc, a, p, v, on, isRec)}" style="${isRec ? `box-shadow:0 0 0 ${k >= 5 ? 3 : 2}px ${GREEN(k)}` : ""}">${SHORT4[p](v)}${flipTag(p, v)}${swTag(sc, a, p, v, on, isRec)}</button>`; }).join("")}</div></div>`; })()).join("")}</div>`;
     // results
     const show = cur || rec;
     h += `<div class="fpr"><div class="tohead"><span class="small">Drag to turn</span><span class="xbtn"><button type="button" class="ghost xb" data-x="fp3d|svg">SVG</button><button type="button" class="ghost xb" data-x="fp3d|png">PNG</button></span></div><div id="fp3d" class="fp3d"></div>`;
@@ -2376,12 +2484,13 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
     }
     // building-wide changes: the other facades with the same change
     const shCh = ch.filter((p) => FS.SHARED.includes(p));
-    if (wi && shCh.length) {
+    if (wi && shCh.length && !wi.opt) {
       const others = B.A.filter((x) => x !== a).map((x) => { const b = B.best.per[x], dz2 = Object.assign({}, b.dz, Object.fromEntries(shCh.map((p) => [p, dz[p]]))), r2 = wiRow(sc, x, dz2);
         return `<li><b>${orientLabel(sc, x)}</b>: ${r2 ? deltaTxt({ dS: pts(r2.m.S) - pts(b.m.S), dC: r2.m.C - b.m.C, dE: r2.m.E - b.m.E }) : "simulating…"}</li>`; }).join("");
       h += `<div class="oth"><b>${cap(shCh.map((p) => NAME4[p].toLowerCase()).join(" and "))} ${shCh.length > 1 ? "apply" : "applies"} to every facade.</b> At the other facades, against their recommended design:<ul>${others}</ul></div>`;
     }
-    if (wi) h += `<button type="button" class="ghost" id="wireset">Back to the recommended design</button>`;
+    h += keepHtml(sc, a, wi, cur);
+    if (wi && st.swMode !== "opt") h += `<button type="button" class="ghost" id="wireset">Back to the recommended design</button>`;
     h += `</div></div>`;
     return h;
   }
@@ -2391,6 +2500,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
     const mo = $("moredet"); if (mo) mo.ontoggle = () => { st.moreOpen = mo.open; };
     document.querySelectorAll("#v4fac .swo button").forEach((b) => b.onclick = () => {
       const p = b.dataset.p, v = b.dataset.v.startsWith("n") ? +b.dataset.v.slice(1) : b.dataset.v;
+      if (st.swMode === "opt") { toggleLock(sc, a, p, v); return; }
       const dz = Object.assign({}, st.wi && st.wi.sc === sc && st.wi.a === a ? st.wi.dz : rec.dz, { [p]: v });
       st.wi = FS.keyOf(dz) === FS.keyOf(rec.dz) ? null : { sc, a, dz }; if (st.sel && st.sel.auto) st.sel = null; renderAll();
     });
@@ -2400,6 +2510,7 @@ ${JSON.stringify(digest(true))}${AI.review && AI.review.value ? "\n\nREVIEW:\n" 
       st.wi = x[0] === "rec" ? null : { sc, a, dz: Object.assign({}, x[2].dz) }; if (st.sel && st.sel.auto) st.sel = null; renderAll(); });
     const dz = st.wi && st.wi.sc === sc && st.wi.a === a ? st.wi.dz : rec.dz, fm = fmapOf(sc, dz, a);
     if (fm) draw3d(fm, S.PARAMS.azimuth[a], "fp3d"); else $("fp3d").innerHTML = `<span class="c3wait">Drawing the room…</span>`;
+    bindModeBar(sc, a);
   }
 
   // ============================================================ v5 additions (27 October 2026)
