@@ -47,6 +47,19 @@ generation. It can be changed in the app.
 | Night ventilation, tilt restrictors and actuators | 15 kg CO₂e per facade | 20 years | Number of facades |
 | Night ventilation across storeys | 5 kg CO₂e/m² | 20 years | Floor area |
 
+### Cooling equipment by capacity class
+
+Counted only when the room needs cooling. The class follows the design cooling load (the peak exceeded in 1% of the
+occupied cooling hours). The values are quantity estimates over 50 years, following the approach of CIBSE TM65 (CIBSE,
+2021) for refrigerant leakage, and are to be replaced by system values from CIBSE TM65.4 when available.
+
+| Cooling class | Typical system | Embodied carbon over 50 years | Made up of |
+|---|---|---|---|
+| Up to 30 W/m² | Cooled slab, water about 18 °C | 14 kg CO₂e/m² floor | PE-X pipes in the slab 5.3 m/m² (1.5), manifolds and distribution (3), plant 0.03 kW/m² at 100 kg CO₂e/kW, three sets in 50 years (9) |
+| Up to 50 W/m² | Chilled ceiling, water about 16 °C | 21 kg CO₂e/m² floor | Capillary mats (1.2), connections and distribution (5), plant 0.05 kW/m² (15) |
+| Up to 100 W/m² | Chilled beams or fan coils | 87 kg CO₂e/m² floor | Units of 175 kg CO₂e per 10 m², 20-year life (52), pipes and insulation (5), plant (30) |
+| Above 100 W/m² | Air conditioning (split or VRF) | 170 kg CO₂e/m² floor | Units 0.15 kW/m² at 200 kg CO₂e/kW, three sets (90), refrigerant R32 at 0.3 kg/kW, GWP 675, 5% leakage a year (77), pipes (3) |
+
 Window area is calculated from the window-to-wall ratio and facade area. A corner room includes both facades. For
 overhangs, the projected area is depth multiplied by length; for fins, it is their projection multiplied by height.
 
@@ -88,11 +101,13 @@ The recommendation therefore prioritises meeting the comfort, energy and dayligh
 carbon to identify the better-performing option among eligible designs.
 
 ## References
-<!-- refs: oekobaudat bnb dgnb icha2026 -->
+<!-- refs: oekobaudat bnb dgnb icha2026 cibse_tm65 -->
 
 Bundesministerium für Wohnen, Stadtentwicklung und Bauwesen. (n.d.-a). *Bewertungssystem Nachhaltiges Bauen (BNB)*. https://www.bnb-nachhaltigesbauen.de
 
 Bundesministerium für Wohnen, Stadtentwicklung und Bauwesen. (n.d.-b). *ÖKOBAUDAT*. https://www.oekobaudat.de
+
+CIBSE. (2021). *TM65: Embodied carbon in building services: A calculation methodology*. Chartered Institution of Building Services Engineers.
 
 Deutsche Gesellschaft für Nachhaltiges Bauen. (n.d.). *DGNB System*. https://www.dgnb-system.de
 

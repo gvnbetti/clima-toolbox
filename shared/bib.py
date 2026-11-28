@@ -1,5 +1,8 @@
 # APA 7 entries, keyed; used to write docs/references.md and each page's reference list
 B = {
+"levine2007": "Levine, M., Ürge-Vorsatz, D., Blok, K., Geng, L., Harvey, D., Lang, S., Levermore, G., Mongameli Mehlwana, A., Mirasgedis, S., Novikova, A., Rilling, J., & Yoshino, H. (2007). Residential and commercial buildings. In B. Metz, O. R. Davidson, P. R. Bosch, R. Dave, & L. A. Meyer (Eds.), *Climate change 2007: Mitigation. Contribution of Working Group III to the Fourth Assessment Report of the Intergovernmental Panel on Climate Change* (pp. 387–446). Cambridge University Press.",
+"jiang_iea": "Jiang, Y. (n.d.). *Temperature and humidity independent control (THIC) of air-conditioning system* [Presentation]. International Energy Agency. https://www.iea.org/files/imports/events/113/16.YiJiang.pdf",
+"cibse_tm65": "CIBSE. (2021). *TM65: Embodied carbon in building services: A calculation methodology*. Chartered Institution of Building Services Engineers.",
 "usdoe_weather": "U.S. Department of Energy. (n.d.). *EnergyPlus weather data* [Data set]. https://energyplus.net/weather",
 "lindberg2008": "Lindberg, F., Holmer, B., & Thorsson, S. (2008). SOLWEIG 1.0: Modelling spatial variations of 3D radiant fluxes and mean radiant temperature in complex urban settings. *International Journal of Biometeorology, 52*(7), 697–713. https://doi.org/10.1007/s00484-008-0162-7",
 "bruse1998": "Bruse, M., & Fleer, H. (1998). Simulating surface–plant–air interactions inside urban environments with a three dimensional numerical model. *Environmental Modelling & Software, 13*(3–4), 373–384. https://doi.org/10.1016/S1364-8152(98)00042-5",

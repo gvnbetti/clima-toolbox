@@ -1183,6 +1183,16 @@ const ENGINE = { solOnWindows: false, skySplit: true };
     return { occ, pres };
   }
   // outdoor humidity ratio (kg/kg) from dew point and pressure, with the shared core's psychrometrics (as Macro Clima)
+  // 0.13.0: cooling classes (register cool.class): humidity ratio at a dew point, the dew-point limits, class and energy
+  const CCL = RV("cool.class"), DP30 = CCL.water[0] - CCL.dewMargin, DP50 = CCL.water[1] - CCL.dewMargin, DP_WIN = DP50;
+  const wSat = (td, p) => { const pv = 611.2 * Math.exp(17.62 * td / (243.12 + td)); return 0.622 * pv / Math.max(pv + 1000, p - pv); };
+  const coolClassK = (pk) => pk == null ? -1 : pk <= CCL.lims[0] ? 0 : pk <= CCL.lims[1] ? 1 : pk <= CCL.lims[2] ? 2 : 3;
+  function coolParts(c) { // delivered electricity for cooling and moisture removal at the class's efficiency and dew-point limit
+    if (!c) return { k: -1, cop: CCL.cop[3], qs: 0, ql: 0, es: 0, el: 0, e: 0 };
+    const k = coolClassK(c.cPeak), cop = k < 0 ? CCL.cop[3] : CCL.cop[k], qs = c.qcs != null ? c.qcs : Math.max(0, (c.qc || 0) - (c.ql || 0));
+    const ql = k === 0 && c.ql30 != null ? c.ql30 : k === 1 && c.ql50 != null ? c.ql50 : (c.ql || 0);
+    return { k, cop, qs, ql, es: qs / cop, el: ql / cop, e: (qs + ql) / cop };
+  }
   function humidityRatio(td, p) {
     const w = new Float32Array(8760), M = root.ClimaMods || globalThis.ClimaMods;
     for (let i = 0; i < 8760; i++) { const pv = M.pws(td[i]); w[i] = M.humRatio(pv, Math.max(pv + 1000, p[i])); }
@@ -1291,6 +1301,7 @@ const ENGINE = { solOnWindows: false, skySplit: true };
     const arm = ctx.nightArm != null ? ctx.nightArm : VR.arm; let curMax = -99, lastMax = -99, wasPres = 0; // night ventilation armed after a warm day
     const top = new Float32Array(8760), tair = new Float32Array(8760), bdown = keepHourly ? new Uint8Array(8760) : null, achH = keepHourly ? new Float32Array(8760) : null, bmask = keepHourly ? new Uint8Array(8760) : null, qIntH = keepHourly ? new Float32Array(8760) : null, gOcc = ctx.gOcc != null ? ctx.gOcc : u.gainOcc;
     const eHist = coolHi ? new Int16Array(CBINS) : null, eHistA = coolHi ? new Int16Array(CBINS) : null; let ePeak = 0, ePeakA = 0, cPeakVent = 0; // ceiling: load at its rating (10 K), fresh-air share at the peak
+    let qL30 = 0, qL50 = 0;
     let qHsum = 0, qCsum = 0, qLsum = 0, humid = 0, tmax = -99, cPeak = 0, latH = 0, cMax = 0, vHours = 0, ventHeat = 0;
     const cHist = coolHi ? new Int16Array(CBINS) : null; // hours of sensible cooling by load, CBIN W/m² floor per bin
     const p = { hVe: 0, thSup: 0, qInt: 0, phiHC: 0, shadeMask: 0 };
@@ -1322,9 +1333,12 @@ const ENGINE = { solOnWindows: false, skySplit: true };
         if (pres[i]) { if (c.dayAch > 0 && tAir > VR.dinDayT && tAir > te) { want = Math.max(base, VR.dinDay); isDay = true; } }
         else if (c.nightAch > 0 && gtotOk && tAir > u.tHeat && tAir > te) want = Math.max(base, c.nightAch === 5 ? 5 : 2);
       } else { // v16 phase 2: air flow of the opening (EN 16798-7, single-sided, no wind); across storeys: 5 1/h
-        const dryOut = !coolHi || wx.w[i] <= W_DEHUM, coolOk = !coolHi || !occ[i] || te <= coolHi[i] - 2;
-        if (pres[i]) { if (c.dayAch > 0 && tAir > VR.dayT && te <= tAir - VR.dayM && te >= VR.dayOut && dryOut && coolOk) { want = Math.max(base, ventFlow(ops, c.dayAch, tAir - te) / V); isDay = true; } }
-        else if (c.nightAch > 0 && lastMax > arm && tAir > u.tHeat && te <= tAir - VR.nightM && dryOut) want = Math.max(base, c.nightAch === 5 ? 5 : ventFlow(ops, 1, tAir - te) / V);
+        /* 0.13.0: in the cooled run a window opens only when the room dew point, with the air it lets in and the moisture
+           gains, stays below the chilled-ceiling water temperature minus 1 K (register cool.class) */
+        const coolOk = !coolHi || !occ[i] || te <= coolHi[i] - 2, wRad = coolHi ? wSat(DP_WIN, wx.p[i]) : 0, G0w = u.moist * Af / 1000;
+        const dryAt = (a) => !coolHi || wx.w[i] + G0w / Math.max(1e-6, rho[i] * V * a) <= wRad;
+        if (pres[i]) { if (c.dayAch > 0 && tAir > VR.dayT && te <= tAir - VR.dayM && te >= VR.dayOut && coolOk) { const a = ventFlow(ops, c.dayAch, tAir - te) / V; if (dryAt(a)) { want = Math.max(base, a); isDay = true; } } }
+        else if (c.nightAch > 0 && lastMax > arm && tAir > u.tHeat && te <= tAir - VR.nightM) { const a = c.nightAch === 5 ? 5 : ventFlow(ops, 1, tAir - te) / V; if (dryAt(a)) want = Math.max(base, a); }
       }
       const sup = c.supply || "outdoor", tb = sup === "earth" ? SA.earth[i] : sup === "evap" ? SA.evap[i] : te;
       const fanOn = c.fans && !din && occ[i] && topPrev >= fanT; p.qInt = (occ[i] ? gOcc : u.gainUnocc) * Af + (fanOn ? fanW * Af : 0); p.phiHC = 0; p.shadeMask = mask;
@@ -1338,6 +1352,8 @@ const ENGINE = { solOnWindows: false, skySplit: true };
           for (let k = 0; k < 2; k++) { const a = lo + (hi - lo) * (tLo - vFloor) / Math.max(1e-9, tLo - tHi); setAir(a); const ra = eng.trial(i, p); if (ra.thOp >= vFloor) { lo = a; tLo = ra.thOp; r = ra; ach = a; } else { hi = a; tHi = ra.thOp; } }
           if (ach === want) { setAir(lo); r = eng.trial(i, p); ach = lo; } }
       }
+      // 0.13.0: windows or cooling, not both: when the room still needs cooling with the window open, the window is shut
+      if (coolHi && occ[i] && ach > base + 1e-6 && r.thOp > coolHi[i]) { setAir(base); ach = base; r = eng.trial(i, p); isDay = false; }
       if (rec && ach > base + 1e-6) { if (isDay) dayOpen++; else nightOpen++; vHours++; }
       if (heat) {
         const tC = coolHi && occ[i] ? coolHi[i] : Infinity;
@@ -1369,7 +1385,10 @@ const ENGINE = { solOnWindows: false, skySplit: true };
             const G0 = u.moist * Af / 1000, mc = q < 0 && r.thAir > 13.5 ? -q * 3.6 / (1.006 * (r.thAir - 13)) : 0; // kg/h
             let w = wi; if (mc > 0) { const we = (m * wSup + G0 + mc * W_COIL) / (m + mc); if (we < wi && wi > W_COIL) w = we; }
             const wf = Math.min(w, W_DEHUM), L = m * (wSup - wf) + G0; // kg/h removed to hold the room at wf
-            if (L > 0) { qLsum += L * 2.45e6 / 3600; if (L * 2.45e6 / 3600 > 0.5 * Af) latH++; } } } // latH: hours with moisture removal above 0.5 W/m² floor
+            if (L > 0) { qLsum += L * 2.45e6 / 3600; if (L * 2.45e6 / 3600 > 0.5 * Af) latH++; }
+            // 0.13.0: moisture removal at the dew-point limits of the radiant classes (cooled slab, chilled ceiling)
+            const L30 = m * (wSup - Math.min(w, wSat(DP30, wx.p[i]))) + G0, L50 = m * (wSup - Math.min(w, wSat(DP50, wx.p[i]))) + G0;
+            if (L30 > 0) qL30 += L30 * 2.45e6 / 3600; if (L50 > 0) qL50 += L50 * 2.45e6 / 3600; } } // latH: hours with moisture removal above 0.5 W/m² floor
       }
     };
     for (let i = 8760 - 672; i < 8760; i++) run(i, false); // four weeks of December as run-up
@@ -1377,7 +1396,7 @@ const ENGINE = { solOnWindows: false, skySplit: true };
     // design peaks (v16): the 99th percentile of the occupied cooling hours, so that a Monday restart does not set the size
     if (cL.length) { cL.sort((a, b) => a[0] - b[0]); const k = cL.length < 100 ? cL.length - 1 : Math.min(cL.length - 1, Math.floor(VR.peak * cL.length)); cPeak = cL[k][0]; cPeakVent = cL[k][1]; }
     ePeak = pctl(eL, VR.peak); ePeakA = pctl(eLA, VR.peak);
-    return { top, tair: keepHourly ? tair : null, bdown, achH, bmask, qIntH, winBits: wins.map((x) => [x.id, x.bit]), nWin: wins.length, heat: qHsum / 1000 / Af, cool: qCsum / 1000 / Af, fanH, fanE: fanH * fanW / 1000, fanMask, coolLat: qLsum / 1000 / Af, cHist, cPeak, cMax, latH, eHist, ePeak, ePeakMax: eL.length ? Math.max.apply(null, eL) : 0, eHistA, ePeakA, cPeakVent, humid, tmax, zone, shade: shd, dayOpen, nightOpen, gtotOk, ventHeat, vHours };
+    return { top, tair: keepHourly ? tair : null, bdown, achH, bmask, qIntH, winBits: wins.map((x) => [x.id, x.bit]), nWin: wins.length, heat: qHsum / 1000 / Af, cool: qCsum / 1000 / Af, fanH, fanE: fanH * fanW / 1000, fanMask, coolLat: qLsum / 1000 / Af, coolLat30: qL30 / 1000 / Af, coolLat50: qL50 / 1000 / Af, cHist, cPeak, cMax, latH, eHist, ePeak, ePeakMax: eL.length ? Math.max.apply(null, eL) : 0, eHistA, ePeakA, cPeakVent, humid, tmax, zone, shade: shd, dayOpen, nightOpen, gtotOk, ventHeat, vHours };
   }
   // free-running and heating-on, scored under every evaluation
   // ideal cooling in occupied hours to an hourly upper limit set by the page from the comfort model (ctx.coolHi; v6, 27 October
@@ -1387,7 +1406,7 @@ const ENGINE = { solOnWindows: false, skySplit: true };
   const coolArr = (ctx) => ctx.coolHi || ctx._coolArr || (ctx._coolArr = new Float32Array(8760).fill(ctx.coolSet || 26));
   function summary(ctx, x, energy) {
     const o = Object.assign(C.scoreAll(x.top, ctx.occ, ctx.dinMask, ctx.BN, x.fanMask), { humid: x.humid, tmax: Math.round(x.tmax * 10) / 10, dayOpen: x.dayOpen, nightOpen: x.nightOpen, ventHeat: x.ventHeat });
-    if (energy) { o.qh = Math.round(x.heat * 10) / 10; o.fanE = Math.round(x.fanE * 100) / 100; o.fanH = x.fanH; o.qcs = Math.round(x.cool * 10) / 10; o.ql = Math.round(x.coolLat * 10) / 10; o.qc = Math.round((x.cool + x.coolLat) * 10) / 10;
+    if (energy) { o.qh = Math.round(x.heat * 10) / 10; o.fanE = Math.round(x.fanE * 100) / 100; o.fanH = x.fanH; o.qcs = Math.round(x.cool * 10) / 10; o.ql = Math.round(x.coolLat * 10) / 10; o.qc = Math.round((x.cool + x.coolLat) * 10) / 10; if (x.coolLat30 != null) { o.ql30 = Math.round(x.coolLat30 * 10) / 10; o.ql50 = Math.round(x.coolLat50 * 10) / 10; }
       if (x.cHist) { o.cHist = Array.from(x.cHist); o.cPeak = Math.round(x.cPeak * 10) / 10; o.latH = x.latH; o.eHist = Array.from(x.eHist); o.ePeak = Math.round(x.ePeak * 10) / 10; o.eHistA = Array.from(x.eHistA); o.ePeakA = Math.round(x.ePeakA * 10) / 10; o.cPeakVent = Math.round(x.cPeakVent * 10) / 10; o.cMax = Math.round(x.cMax * 10) / 10; } } // qc: sensible + latent; cHist: hours of sensible cooling by load
     return o;
   }
@@ -1417,7 +1436,7 @@ const ENGINE = { solOnWindows: false, skySplit: true };
     const out = []; for (let i = 0; i < k; i++) { const d = {}; keys.forEach((key) => { d[key] = cols[key][i]; }); out.push(d); }
     return out;
   }
-  const api = { CBIN, CBINS, USE, OPAQUE, panes, colOf, FIXED, WALL, SUPPLY, ROOF, supplyAir, blindsDown, SHADES, SHADE_LEVELS, SHADE_IRR, PARAMS, SCENARIOS, schedules, context, simulate, runCombo, runDin, T_WATER, FAN_W, designs, shadeOf, zoneParams, humidityRatio, isNorth, shadeSide, achOccOf, pctl, VR, openings, effArea, ventFlow, carbonOf };
+  const api = { coolParts, coolClassK, DP30, DP50, CBIN, CBINS, USE, OPAQUE, panes, colOf, FIXED, WALL, SUPPLY, ROOF, supplyAir, blindsDown, SHADES, SHADE_LEVELS, SHADE_IRR, PARAMS, SCENARIOS, schedules, context, simulate, runCombo, runDin, T_WATER, FAN_W, designs, shadeOf, zoneParams, humidityRatio, isNorth, shadeSide, achOccOf, pctl, VR, openings, effArea, ventFlow, carbonOf };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Sweep = api;
 })(this);
 
@@ -1700,7 +1719,7 @@ const ENGINE = { solOnWindows: false, skySplit: true };
     const fk = row.dz.fans && o.fanOk ? "_fan" : "";
     // v16 phase 3.2: with o.rk (ranking options from the page) also the share of hours above the band and the DIN estimate
     const rk = o.rk, hx = row.heat[o.key + fk], H = rk && rk.model !== "din" && Array.isArray(hx) ? 100 * hx[3] / rk.nOcc : null, din = rk && rk.dinLim != null ? row.heat["din_" + rk.region] : null;
-    return { H, din, A1: dl.A1, S: dl.S, C: comfortOf(row.heat, o.key + fk), E: (o.mode === "heat" ? row.heat.qh / o.copH + (row.heat.fanE || 0) : row.cool.qh / o.copH + row.cool.qc / o.copC + (row.cool.fanE || 0)) + (row.heat.lightE || 0) };
+    return { H, din, A1: dl.A1, S: dl.S, C: comfortOf(row.heat, o.key + fk), E: (o.mode === "heat" ? row.heat.qh / o.copH + (row.heat.fanE || 0) : row.cool.qh / o.copH + S.coolParts(row.cool).e + (row.cool.fanE || 0)) + (row.heat.lightE || 0) };
   }
   function evaluator(ctx, o) {
     const seen = new Map(), arch = [];
